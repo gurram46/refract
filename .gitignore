@@ -1,0 +1,27 @@
+# Common OS files
+.DS_Store
+Thumbs.db
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs and local runtime files
+*.log
+.env
+.env.*
+!.env.example
+
+# Build and dependency outputs
+node_modules/
+dist/
+build/
+coverage/
+.tmp/
+tmp/
+
+# Language-specific caches
+__pycache__/
+*.py[cod]
