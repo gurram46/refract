@@ -14,6 +14,9 @@ Thumbs.db
 .env.*
 !.env.example
 
+# Repo-internal working files
+.internal/
+
 # Build and dependency outputs
 node_modules/
 dist/
