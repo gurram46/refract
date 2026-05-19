@@ -96,7 +96,18 @@ Kitchen always picks from the front."
 If user says "yes" / "got it" / "makes sense" → 
   ask: "Did you need a diagram or was the words enough?"
   Words enough → visual_preference: low
-  Needed diagram → visual_preference: high
+  If user says they needed a diagram →
+    visual_preference: high
+    show this ASCII before proceeding:
+
+    Order 1 → Order 2 → Order 3 → Order 4
+    [FRONT]                         [BACK]
+
+    New orders join at BACK  
+    Kitchen picks from FRONT
+
+    Then say exactly: "Got it. I'll always show you visuals first."
+    Then continue to STEP 5.
 
 If user asks for more explanation or seems confused →
   visual_preference: high
