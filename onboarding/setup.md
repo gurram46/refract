@@ -22,6 +22,17 @@ Ask the user exactly this:
 3 → goal: systems
 4 → goal: curious
 
+If user picks more than one goal →
+ask exactly: "Which one is more important to you right now?"
+Then write that one to `profile.md` as primary `goal`.
+Write the other as `secondary_goal`.
+
+Example output:
+```yaml
+goal: interview
+secondary_goal: startup
+```
+
 ---
 
 ## STEP 1 — Coding history check
@@ -170,6 +181,7 @@ filling in the values from the test:
 ```yaml
 name: [user's answer]
 goal: [interview | startup | systems | curious]
+secondary_goal: [interview | startup | systems | curious] ← only if user picked more than one goal
 mode: [beginner | intermediate | expert] ← use thinking_level
 coding_level: [beginner | intermediate | expert]
 thinking_level: [beginner | intermediate | expert]
