@@ -1,3 +1,12 @@
+---
+concept: queues
+track: dsa
+prereqs: none
+next: stacks
+coding_levels: beginner, intermediate, expert
+thinking_levels: beginner, intermediate, expert
+---
+
 # Queues
 
 ## Story [everyone reads this]

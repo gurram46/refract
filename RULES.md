@@ -14,3 +14,4 @@ These are the hard rules every AI model must follow when teaching from this repo
 10. Push all artifacts to GitHub before ending session
 11. Cheating prevention: problems are always contextual to previous step — copy-pasting without understanding breaks the next step by design
 12. Behavioral signals to log: response time, clarifying questions asked, hints requested
+13. Sections tagged [thinking_level: intermediate+] are skipped for beginner thinkers. Sections tagged [coding_level: intermediate+] show pseudocode only for beginner coders.
