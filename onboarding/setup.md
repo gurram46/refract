@@ -7,27 +7,63 @@ Do not skip steps. Do not add extra questions.
 
 ---
 
-## STEP 1 — The only first question
+## STEP 0 — Goal check
+
+Ask the user exactly this:
+
+"What's your goal?
+1. Crack a product company interview
+2. Get into a startup
+3. Understand how systems work
+4. Just curious"
+
+1 → goal: interview
+2 → goal: startup
+3 → goal: systems
+4 → goal: curious
+
+---
+
+## STEP 1 — Coding history check
 
 Ask the user exactly this, nothing else:
 
 "Have you written code before, even a little?"
 
-If NO → skip to STEP 3, set coding_level: beginner, 
-thinking_level: beginner, skip all tests.
+If NO → set coding_level: beginner, thinking_level: beginner, skip STEP 2, and go to STEP 3.
 
-If YES → go to STEP 2.
+If YES → go to STEP 1A.
+
+---
+
+## STEP 1A — Coding level check
+
+Ask exactly this:
+
+"Pick the one that fits you best:
+1. I have never written code
+2. I know basics — variables, loops, functions
+3. I have built projects before"
+
+1 → coding_level: beginner, thinking_level: beginner, skip STEP 2
+2 → coding_level: intermediate, go to STEP 2 and ask Question 1 only
+3 → coding_level: expert, go to STEP 2 and ask all 3 questions
 
 ---
 
 ## STEP 2 — Pattern Recognition Test
 
+Only run this step for users with coding_level: intermediate or expert.
+
 Tell the user exactly this before starting:
 
-"Three quick questions. No code. No googling needed. 
-Just tell me what pattern you think each problem uses."
+"Quick pattern check. No code. No googling needed. 
+Just tell me what pattern you think the problem uses."
 
-Then ask one at a time. Wait for answer before next question.
+Ask one at a time. Wait for answer before next question.
+
+If coding_level: intermediate → ask Question 1 only.
+If coding_level: expert → ask all 3 questions.
 
 ### Question 1 [Easy]
 "You have a list of Swiggy orders coming in every second.
@@ -56,9 +92,14 @@ Expected: Monotonic Stack
 Accept also: stack, decreasing stack
 
 ### Scoring
-3/3 → thinking_level: expert
-2/3 → thinking_level: intermediate  
-1/3 or 0/3 → thinking_level: beginner
+For coding_level: intermediate:
+- Question 1 correct → thinking_level: intermediate
+- Question 1 wrong → thinking_level: beginner
+
+For coding_level: expert:
+- 3/3 → thinking_level: expert
+- 2/3 → thinking_level: intermediate
+- 1/3 or 0/3 → thinking_level: beginner
 
 ### After scoring tell the user their result in one line:
 "Got it. You think at [level] level."
@@ -66,18 +107,20 @@ Nothing more.
 
 ---
 
-## STEP 3 — Coding level check
+## STEP 3 — Language track check
 
 Ask exactly this:
 
-"Pick the one that fits you best:
-1. I have never written code
-2. I know basics — variables, loops, functions
-3. I have built projects before"
+"What do you want to build?
+1. Backend and servers
+2. Just DSA and problem solving, no specific language
+3. Something else"
 
-1 → coding_level: beginner
-2 → coding_level: intermediate
-3 → coding_level: expert
+1 → language_track: go
+2 → language_track: none
+3 → language_track: go
+
+If language_track: none, teach in pure DSA mode with pseudocode only.
 
 ---
 
@@ -117,16 +160,21 @@ If user asks for more explanation or seems confused →
 
 ## STEP 5 — Write to profile.md
 
+Before writing profile.md, ask exactly this:
+
+"What should I call you?"
+
 After all steps write exactly this to profile.md,
 filling in the values from the test:
 
 ```yaml
-name: [ask user their name before writing]
+name: [user's answer]
+goal: [interview | startup | systems | curious]
 mode: [beginner | intermediate | expert] ← use thinking_level
 coding_level: [beginner | intermediate | expert]
 thinking_level: [beginner | intermediate | expert]
 visual_preference: [high | medium | low]
-language_track: go
+language_track: [go | none]
 started: [today's date]
 last_session: [today's date]
 current_concept: queues
@@ -151,6 +199,8 @@ Just teach.
 - Never ask more than one question at a time
 - Never explain what you are about to do — just do it
 - Never say "great answer" or "well done" — just proceed
-- If user gives wrong pattern recognition answer, 
-  just score it silently and move on
+- If user gives wrong pattern recognition answer, just score it silently and move on
+- Never run pattern recognition for users who have never coded
+- Users with basic or college-level coding get only the easy pattern question
+- Users who have built projects get all three pattern questions
 - Total onboarding should take under 5 minutes
