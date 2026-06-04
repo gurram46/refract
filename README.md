@@ -45,3 +45,47 @@ Claude picks up exactly where you left off.
 ---
 
 ## What's inside
+
+```
+onboarding/     ← start here, runs once
+dsa/            ← concept files, one pattern per file
+system-design/  ← SD concepts connected to DSA
+game-theory/    ← strategic thinking layer
+backend/go/     ← real server + SQL code
+languages/go/   ← Go implementation per concept
+prompts/        ← paste into Claude to start session
+profile.md      ← your learning profile, auto-updated
+progress.md     ← your session log, auto-updated
+code-quality.md ← your code quality trend, auto-updated
+RULES.md        ← rules every AI model follows when teaching
+```
+
+---
+
+## Why Game Theory
+
+DSA teaches you what to build.
+System design teaches you how to build it at scale.
+Game theory teaches you why one design wins when 
+real users, services, and systems compete for resources.
+
+It's not academic. It's the missing mental model.
+
+---
+
+## Contributing
+
+Read CONTRIBUTING.md before opening a PR.
+Want to add a language track? Add a folder under 
+languages/ and backend/ and follow _template.md.
+LeetCode and SD links must be human verified — no exceptions.
+
+---
+
+## Current Status
+
+v0.1 — core loop working.
+Concept files being added one at a time.
+Profile site coming soon.
+
+Star the repo if this helped you think differently.
