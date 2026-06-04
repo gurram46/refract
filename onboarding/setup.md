@@ -33,6 +33,23 @@ goal: interview
 secondary_goal: startup
 ```
 
+If user seems confused, picks multiple goals without clear primary,
+or says "I don't know" → show this exactly before asking again:
+
+"Quick reality check:
+- Google/Amazon goal → DSA patterns + system design
+- Startup goal → backend projects + shipping fast  
+- Just exploring → DSA only, no language pressure
+
+All three start the same way.
+You can change this anytime by editing profile.md.
+Pick one for now."
+
+Then ask the goal question again once.
+
+User can update goal anytime by editing `profile.md`.
+Claude re-adapts at next session start automatically.
+
 ---
 
 ## STEP 1 — Coding history check
@@ -182,6 +199,7 @@ filling in the values from the test:
 name: [user's answer]
 goal: [interview | startup | systems | curious]
 secondary_goal: [interview | startup | systems | curious] ← only if user picked more than one goal
+goal_locked: false
 mode: [beginner | intermediate | expert] ← use thinking_level
 coding_level: [beginner | intermediate | expert]
 thinking_level: [beginner | intermediate | expert]
