@@ -25,7 +25,7 @@ Ask the user exactly this:
 If user picks more than one goal →
 ask exactly: "Which one is more important to you right now?"
 Then write that one to `profile.md` as primary `goal`.
-Write the other as `secondary_goal`.
+Write the other as `secondary_goal: [value]`.
 
 Example output:
 ```yaml
