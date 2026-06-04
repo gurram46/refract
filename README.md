@@ -2,14 +2,46 @@
 
 One concept. Five lenses. Your own pace.
 
-Refract is an open source, fork-based learning system where Claude/GPT teaches through structured markdown, GitHub stores progress, and each concept is revisited through five connected lenses. It focuses on DSA, Backend + SQL, System Design, Game Theory, and Go without becoming a platform or SaaS.
+Refract is an open source learning system that teaches DSA, 
+System Design, Game Theory, and Backend development as one 
+connected story — not four separate subjects.
 
-## Five Lenses
+Claude or GPT is your teacher. This repo is your memory.
+No platform. No subscription. Just fork and start.
 
-Go -> DSA -> Backend + SQL -> System Design -> Game Theory
+---
 
-## Start
+## How it works
 
-Fork this repository, open `profile.md`, complete onboarding in `onboarding/setup.md`, then start a session using `prompts/session-start.md`.
+Every concept is taught through five lenses:
 
-Read [RULES.md](RULES.md) before learning and [CONTRIBUTING.md](CONTRIBUTING.md) before adding content.
+Go → DSA → Backend + SQL → System Design → Game Theory
+
+Same concept. Different depth. One story.
+
+---
+
+## Start in 60 seconds
+
+1. Fork this repo
+2. Open Claude or GPT
+3. Paste the contents of prompts/session-start.md
+4. Give Claude your fork URL when asked
+5. Answer 4 onboarding questions
+6. Start learning
+
+That's it. Come back tomorrow, paste session-start.md again.
+Claude picks up exactly where you left off.
+
+---
+
+## Who is this for
+
+- Complete beginners — no coding experience needed
+- Developers learning Go — refresh fundamentals with depth
+- Interview preppers — DSA patterns + real company problems
+- Curious people — understand how systems actually work
+
+---
+
+## What's inside
