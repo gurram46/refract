@@ -10,3 +10,12 @@ Hard: https://leetcode.com/problems/number-of-visible-people-in-a-queue/
 
 SD Equivalent: Design a job queue system with retries
 Reference: https://bytebytego.com
+
+## Stacks
+
+Easy: https://leetcode.com/problems/valid-parentheses/
+Medium: https://leetcode.com/problems/min-stack/
+Hard: https://leetcode.com/problems/largest-rectangle-in-histogram/
+
+SD Equivalent: Design an undo/redo system for a text editor
+Reference: https://bytebytego.com
