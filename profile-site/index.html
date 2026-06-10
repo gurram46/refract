@@ -170,6 +170,18 @@
       return response.text();
     }
 
+    function readLocalFile(file, expectedName) {
+      if (!file) {
+        return Promise.reject(new Error(`Missing local file: ${expectedName}`));
+      }
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error(`Failed to read ${expectedName}: ${reader.error ? reader.error.message : 'unknown error'}`));
+        reader.readAsText(file);
+      });
+    }
+
     function Badge({ value }) {
       const normalized = String(value || 'unknown').toLowerCase();
       return e('span', {
@@ -203,6 +215,7 @@
 
     function App() {
       const [repoUrl, setRepoUrl] = useState('');
+      const [localFiles, setLocalFiles] = useState({ profile: null, progress: null, quality: null });
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState('');
       const [data, setData] = useState(null);
@@ -218,6 +231,25 @@
             fetchText(rawBase, 'profile.md'),
             fetchText(rawBase, 'progress.md'),
             fetchText(rawBase, 'code-quality.md')
+          ]);
+          setData({ profileMd, progressMd, qualityMd });
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function loadLocalDashboard(event) {
+        event.preventDefault();
+        setLoading(true);
+        setError('');
+        setData(null);
+        try {
+          const [profileMd, progressMd, qualityMd] = await Promise.all([
+            readLocalFile(localFiles.profile, 'profile.md'),
+            readLocalFile(localFiles.progress, 'progress.md'),
+            readLocalFile(localFiles.quality, 'code-quality.md')
           ]);
           setData({ profileMd, progressMd, qualityMd });
         } catch (err) {
@@ -246,27 +278,54 @@
           e('div', null,
             e('p', { className: 'mb-3 text-sm font-semibold uppercase tracking-[0.32em] text-amber-400' }, 'Refract'),
             e('h1', { className: 'max-w-3xl text-4xl font-black tracking-tight text-white sm:text-6xl' }, 'Learning dashboard'),
-            e('p', { className: 'mt-4 max-w-2xl text-base leading-7 text-zinc-400' }, 'Paste a raw GitHub fork URL. Refract reads your profile, progress, and code quality files into one dashboard.')
+            e('p', { className: 'mt-4 max-w-2xl text-base leading-7 text-zinc-400' }, 'Load a public GitHub fork URL or upload local files from a private clone. No token needed for local mode.')
           ),
-          e('form', { onSubmit: loadDashboard, className: 'w-full rounded-3xl border border-amber-500/20 bg-[#111111] p-3 md:max-w-xl' },
-            e('label', { className: 'mb-2 block text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400' }, 'Fork URL'),
-            e('div', { className: 'flex flex-col gap-3 sm:flex-row' },
-              e('input', {
-                value: repoUrl,
-                onChange: (event) => setRepoUrl(event.target.value),
-                placeholder: 'https://github.com/you/refract',
-                className: 'min-w-0 flex-1 rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none ring-amber-500/0 transition focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10'
-              }),
+          e('div', { className: 'grid w-full gap-4 md:max-w-xl' },
+            e('form', { onSubmit: loadDashboard, className: 'rounded-3xl border border-amber-500/20 bg-[#111111] p-3' },
+              e('label', { className: 'mb-2 block text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400' }, 'Public fork URL'),
+              e('div', { className: 'flex flex-col gap-3 sm:flex-row' },
+                e('input', {
+                  value: repoUrl,
+                  onChange: (event) => setRepoUrl(event.target.value),
+                  placeholder: 'https://github.com/you/refract',
+                  className: 'min-w-0 flex-1 rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none ring-amber-500/0 transition focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10'
+                }),
+                e('button', {
+                  type: 'submit',
+                  disabled: loading,
+                  className: 'rounded-2xl bg-amber-500 px-5 py-3 text-sm font-bold text-black transition hover:bg-amber-400 disabled:cursor-wait disabled:opacity-60'
+                }, loading ? 'Loading' : 'Load URL')
+              )
+            ),
+            e('form', { onSubmit: loadLocalDashboard, className: 'rounded-3xl border border-white/10 bg-[#111111] p-3' },
+              e('label', { className: 'mb-3 block text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400' }, 'Private or local clone files'),
+              e('div', { className: 'grid gap-3 sm:grid-cols-3' },
+                e(FileInput, { label: 'profile.md', onChange: (file) => setLocalFiles((prev) => Object.assign({}, prev, { profile: file })) }),
+                e(FileInput, { label: 'progress.md', onChange: (file) => setLocalFiles((prev) => Object.assign({}, prev, { progress: file })) }),
+                e(FileInput, { label: 'code-quality.md', onChange: (file) => setLocalFiles((prev) => Object.assign({}, prev, { quality: file })) })
+              ),
               e('button', {
                 type: 'submit',
                 disabled: loading,
-                className: 'rounded-2xl bg-amber-500 px-5 py-3 text-sm font-bold text-black transition hover:bg-amber-400 disabled:cursor-wait disabled:opacity-60'
-              }, loading ? 'Loading' : 'Load')
+                className: 'mt-3 w-full rounded-2xl border border-amber-500/30 bg-black px-5 py-3 text-sm font-bold text-amber-300 transition hover:bg-amber-500 hover:text-black disabled:cursor-wait disabled:opacity-60'
+              }, loading ? 'Loading' : 'Load local files')
             )
           )
         ),
         error ? e('div', { className: 'mb-6 rounded-2xl border border-red-500/40 bg-red-500/10 p-4 font-mono text-sm text-red-200' }, error) : null,
-        dashboard ? e(Dashboard, dashboard) : e('div', { className: 'rounded-3xl border border-dashed border-white/10 bg-[#111111]/70 p-10 text-center text-zinc-400' }, 'Dashboard appears here after loading your fork.')
+        dashboard ? e(Dashboard, dashboard) : e('div', { className: 'rounded-3xl border border-dashed border-white/10 bg-[#111111]/70 p-10 text-center text-zinc-400' }, 'Dashboard appears here after loading your fork or local files.')
+      );
+    }
+
+    function FileInput({ label, onChange }) {
+      return e('label', { className: 'block cursor-pointer rounded-2xl border border-white/10 bg-black p-3 text-sm text-zinc-300 transition hover:border-amber-500/50' },
+        e('span', { className: 'mb-2 block font-semibold text-white' }, label),
+        e('input', {
+          type: 'file',
+          accept: '.md,text/markdown,text/plain',
+          onChange: (event) => onChange(event.target.files && event.target.files[0] ? event.target.files[0] : null),
+          className: 'w-full text-xs text-zinc-400 file:mr-3 file:rounded-full file:border-0 file:bg-amber-500 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-black'
+        })
       );
     }
 

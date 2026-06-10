@@ -35,6 +35,20 @@ Claude picks up exactly where you left off.
 
 ---
 
+## Private repo or local study
+
+For personal learning, use your own fork or private clone.
+Keep this repo as the open-source curriculum.
+
+The profile dashboard supports two modes:
+
+1. Public fork URL — paste your GitHub fork URL
+2. Local files — upload profile.md, progress.md, and code-quality.md
+
+Local mode works for private repos without GitHub tokens.
+
+---
+
 ## Who is this for
 
 - Complete beginners — no coding experience needed
