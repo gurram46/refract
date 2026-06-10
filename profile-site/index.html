@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Refract Profile Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --card: #111111;
+      --accent: #f59e0b;
+    }
+    body {
+      background: radial-gradient(circle at top left, rgba(245, 158, 11, 0.13), transparent 34rem), var(--bg);
+      color: #ffffff;
+      min-height: 100vh;
+    }
+    .bar-fill {
+      transform-origin: left;
+      animation: grow-bar 900ms cubic-bezier(.2,.8,.2,1) both;
+    }
+    @keyframes grow-bar {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+    .timeline-line::before {
+      content: "";
+      position: absolute;
+      left: 0.55rem;
+      top: 1rem;
+      bottom: -1rem;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.14);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    const { useMemo, useState } = React;
+    const e = React.createElement;
+
+    const levelColor = {
+      beginner: 'bg-amber-500/15 text-amber-300 ring-amber-500/40',
+      intermediate: 'bg-blue-500/15 text-blue-300 ring-blue-500/40',
+      expert: 'bg-green-500/15 text-green-300 ring-green-500/40'
+    };
+
+    function cx() {
+      return Array.from(arguments).filter(Boolean).join(' ');
+    }
+
+    function normalizeValue(value) {
+      if (!value) return '';
+      const clean = String(value).trim().replace(/^['"]|['"]$/g, '');
+      if (!clean || clean.includes('[') || clean.includes(']')) return '';
+      return clean;
+    }
+
+    function parseKeyValues(markdown) {
+      const fields = {};
+      markdown.split(/\r?\n/).forEach((line) => {
+        const match = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*):\s*(.*)$/);
+        if (match) fields[match[1]] = normalizeValue(match[2]);
+      });
+      return fields;
+    }
+
+    function parseArrayField(markdown, key) {
+      const match = markdown.match(new RegExp('^' + key + ':\\s*(.*)$', 'm'));
+      if (!match) return [];
+      const raw = match[1].trim();
+      if (!raw || raw === '[]') return [];
+      if (raw.startsWith('[') && raw.endsWith(']')) {
+        return raw.slice(1, -1).split(',').map((item) => item.trim().replace(/^['"]|['"]$/g, '')).filter(Boolean);
+      }
+      return [raw];
+    }
+
+    function withoutCodeFences(markdown) {
+      let inside = false;
+      return markdown.split(/\r?\n/).filter((line) => {
+        if (line.trim().startsWith('```')) {
+          inside = !inside;
+          return false;
+        }
+        return !inside;
+      }).join('\n');
+    }
+
+    function parseProgress(markdown) {
+      const visible = withoutCodeFences(markdown);
+      const matches = Array.from(visible.matchAll(/^##\s+(.+)$/gm));
+      return matches.map((match, index) => {
+        const concept = match[1].trim();
+        if (!concept || concept.includes('[concept name]')) return null;
+        const start = match.index + match[0].length;
+        const end = index + 1 < matches.length ? matches[index + 1].index : visible.length;
+        const body = visible.slice(start, end);
+        const fields = parseKeyValues(body);
+        return {
+          concept,
+          date: fields.date || 'date unknown',
+          status: fields.status || 'unknown',
+          score: fields.score || '',
+          body
+        };
+      }).filter(Boolean).reverse();
+    }
+
+    function parseCodeScores(markdown) {
+      const blocks = markdown.split(/\nsession:\s*/i).slice(1);
+      return blocks.map((block) => parseKeyValues('session: ' + block))
+        .filter((entry) => entry.session && !String(entry.session).includes('['))
+        .map((entry) => ({
+          session: entry.session,
+          date: entry.date || '',
+          concept: entry.concept || '',
+          score: Number(entry.score) || 0,
+          trend: entry.trend || '',
+          strengths: entry.strengths || '',
+          gaps: entry.gaps || ''
+        }));
+    }
+
+    function levelToScore(level) {
+      const normalized = String(level || '').toLowerCase();
+      if (normalized === 'expert') return 5;
+      if (normalized === 'intermediate') return 3;
+      if (normalized === 'beginner') return 1;
+      const numeric = Number(normalized);
+      return Number.isFinite(numeric) ? Math.max(0, Math.min(5, numeric)) : 0;
+    }
+
+    function scoreColor(score) {
+      if (score >= 4) return 'bg-green-500';
+      if (score >= 2.5) return 'bg-amber-500';
+      return 'bg-red-500';
+    }
+
+    function repoToRawBase(input) {
+      const trimmed = input.trim().replace(/\.git$/, '').replace(/\/$/, '');
+      if (!trimmed) throw new Error('Fork URL is empty.');
+      const rawMatch = trimmed.match(/^https?:\/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)(?:\/.*)?$/i);
+      if (rawMatch) {
+        return `https://raw.githubusercontent.com/${rawMatch[1]}/${rawMatch[2]}/${rawMatch[3]}`;
+      }
+      const match = trimmed.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)(?:\/tree\/([^\/]+))?/i);
+      if (!match) throw new Error('Invalid GitHub repo URL. Use https://github.com/user/repo');
+      const owner = match[1];
+      const repo = match[2];
+      const branch = match[3] || 'main';
+      return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}`;
+    }
+
+    async function fetchText(rawBase, file) {
+      const url = `${rawBase}/${file}`;
+      let response;
+      try {
+        response = await fetch(url, { cache: 'no-store' });
+      } catch (error) {
+        throw new Error(`Failed to fetch ${file}: ${error.message}`);
+      }
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${file}: HTTP ${response.status} ${response.statusText}`);
+      }
+      return response.text();
+    }
+
+    function Badge({ value }) {
+      const normalized = String(value || 'unknown').toLowerCase();
+      return e('span', {
+        className: cx('inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1', levelColor[normalized] || 'bg-zinc-700 text-zinc-200 ring-zinc-500/40')
+      }, value || 'unknown');
+    }
+
+    function Card({ title, children, className }) {
+      return e('section', { className: cx('rounded-3xl border border-white/10 bg-[#111111] p-5 shadow-2xl shadow-black/30', className) },
+        title ? e('h2', { className: 'mb-4 text-lg font-semibold tracking-tight text-white' }, title) : null,
+        children
+      );
+    }
+
+    function Bar({ label, score }) {
+      const safe = Math.max(0, Math.min(5, Number(score) || 0));
+      return e('div', { className: 'space-y-2' },
+        e('div', { className: 'flex items-center justify-between gap-4 text-sm' },
+          e('span', { className: 'text-zinc-200' }, label),
+          e('span', { className: 'font-mono text-zinc-400' }, `${safe}/5`)
+        ),
+        e('div', { className: 'h-3 overflow-hidden rounded-full bg-white/10' },
+          e('div', { className: cx('bar-fill h-full rounded-full', scoreColor(safe)), style: { width: `${safe * 20}%` } })
+        )
+      );
+    }
+
+    function EmptyHint() {
+      return e('p', { className: 'text-sm text-zinc-400' }, 'Complete more sessions to unlock');
+    }
+
+    function App() {
+      const [repoUrl, setRepoUrl] = useState('');
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState('');
+      const [data, setData] = useState(null);
+
+      async function loadDashboard(event) {
+        event.preventDefault();
+        setLoading(true);
+        setError('');
+        setData(null);
+        try {
+          const rawBase = repoToRawBase(repoUrl);
+          const [profileMd, progressMd, qualityMd] = await Promise.all([
+            fetchText(rawBase, 'profile.md'),
+            fetchText(rawBase, 'progress.md'),
+            fetchText(rawBase, 'code-quality.md')
+          ]);
+          setData({ profileMd, progressMd, qualityMd });
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      const dashboard = useMemo(() => {
+        if (!data) return null;
+        const profile = parseKeyValues(data.profileMd);
+        const progress = parseProgress(data.progressMd);
+        const scores = parseCodeScores(data.qualityMd);
+        const latestScore = scores.length ? scores[scores.length - 1].score : 0;
+        const findings = {
+          pattern_gaps: parseArrayField(data.qualityMd, 'pattern_gaps'),
+          consistent_strengths: parseArrayField(data.qualityMd, 'consistent_strengths'),
+          recommended_focus: parseArrayField(data.qualityMd, 'recommended_focus')
+        };
+        return { profile, progress, scores, latestScore, findings };
+      }, [data]);
+
+      return e('main', { className: 'mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8' },
+        e('header', { className: 'mb-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between' },
+          e('div', null,
+            e('p', { className: 'mb-3 text-sm font-semibold uppercase tracking-[0.32em] text-amber-400' }, 'Refract'),
+            e('h1', { className: 'max-w-3xl text-4xl font-black tracking-tight text-white sm:text-6xl' }, 'Learning dashboard'),
+            e('p', { className: 'mt-4 max-w-2xl text-base leading-7 text-zinc-400' }, 'Paste a raw GitHub fork URL. Refract reads your profile, progress, and code quality files into one dashboard.')
+          ),
+          e('form', { onSubmit: loadDashboard, className: 'w-full rounded-3xl border border-amber-500/20 bg-[#111111] p-3 md:max-w-xl' },
+            e('label', { className: 'mb-2 block text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400' }, 'Fork URL'),
+            e('div', { className: 'flex flex-col gap-3 sm:flex-row' },
+              e('input', {
+                value: repoUrl,
+                onChange: (event) => setRepoUrl(event.target.value),
+                placeholder: 'https://github.com/you/refract',
+                className: 'min-w-0 flex-1 rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none ring-amber-500/0 transition focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10'
+              }),
+              e('button', {
+                type: 'submit',
+                disabled: loading,
+                className: 'rounded-2xl bg-amber-500 px-5 py-3 text-sm font-bold text-black transition hover:bg-amber-400 disabled:cursor-wait disabled:opacity-60'
+              }, loading ? 'Loading' : 'Load')
+            )
+          )
+        ),
+        error ? e('div', { className: 'mb-6 rounded-2xl border border-red-500/40 bg-red-500/10 p-4 font-mono text-sm text-red-200' }, error) : null,
+        dashboard ? e(Dashboard, dashboard) : e('div', { className: 'rounded-3xl border border-dashed border-white/10 bg-[#111111]/70 p-10 text-center text-zinc-400' }, 'Dashboard appears here after loading your fork.')
+      );
+    }
+
+    function Dashboard({ profile, progress, scores, latestScore, findings }) {
+      const totalSessions = progress.length;
+      const patternScore = levelToScore(profile.thinking_level || profile.mode);
+      const bars = [
+        ['DSA level', levelToScore(profile.dsa_level || profile.thinking_level || profile.mode)],
+        ['System Design level', levelToScore(profile.sd_level)],
+        ['Code Quality', latestScore],
+        ['Language level', levelToScore(profile.lang_level || profile.coding_level)],
+        ['Pattern Recognition', patternScore]
+      ];
+
+      return e('div', { className: 'grid gap-5 lg:grid-cols-12' },
+        e(Card, { title: 'Profile Card', className: 'lg:col-span-4' },
+          e('div', { className: 'space-y-5' },
+            e('div', null,
+              e('p', { className: 'text-sm text-zinc-400' }, 'Learner'),
+              e('h2', { className: 'mt-1 text-3xl font-bold text-white' }, profile.name || 'Unnamed learner')
+            ),
+            e('div', { className: 'grid grid-cols-2 gap-3 text-sm' },
+              e(Field, { label: 'Goal', value: profile.goal || 'not set' }),
+              e(Field, { label: 'Started', value: profile.started || 'not set' }),
+              e(Field, { label: 'Language', value: profile.language_track || 'not set' }),
+              e(Field, { label: 'Sessions', value: totalSessions })
+            ),
+            e('div', { className: 'flex flex-wrap gap-2' },
+              e(Badge, { value: profile.thinking_level || profile.mode || 'thinking unknown' }),
+              e(Badge, { value: profile.coding_level || 'coding unknown' }),
+              e(Badge, { value: profile.visual_preference || 'visual unknown' })
+            )
+          )
+        ),
+        e(Card, { title: 'Skill Ratings', className: 'lg:col-span-8' },
+          e('div', { className: 'grid gap-5 md:grid-cols-2' }, bars.map(([label, score]) => e(Bar, { key: label, label, score })))
+        ),
+        e(Card, { title: 'Key Findings', className: 'lg:col-span-12' },
+          e('div', { className: 'grid gap-4 md:grid-cols-3' },
+            e(FindingCard, { title: 'Consistent Strengths', items: findings.consistent_strengths, tone: 'green' }),
+            e(FindingCard, { title: 'Pattern Gaps', items: findings.pattern_gaps, tone: 'amber' }),
+            e(FindingCard, { title: 'Recommended Focus', items: findings.recommended_focus, tone: 'blue' })
+          )
+        ),
+        e(Card, { title: 'Session Timeline', className: 'lg:col-span-12' },
+          progress.length ? e('div', { className: 'space-y-4' }, progress.map((entry, index) => {
+            const matchedScore = scores.find((score) => score.concept && score.concept.toLowerCase() === entry.concept.toLowerCase());
+            const score = entry.score || (matchedScore ? matchedScore.score : '');
+            return e('div', { key: `${entry.concept}-${index}`, className: 'timeline-line relative pl-8' },
+              e('div', { className: 'absolute left-0 top-1 h-3 w-3 rounded-full border-2 border-amber-500 bg-[#111111]' }),
+              e('div', { className: 'rounded-2xl border border-white/10 bg-black/40 p-4' },
+                e('div', { className: 'flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between' },
+                  e('div', null,
+                    e('p', { className: 'text-xs uppercase tracking-[0.2em] text-zinc-500' }, entry.date),
+                    e('h3', { className: 'mt-1 text-lg font-semibold text-white' }, entry.concept)
+                  ),
+                  e('div', { className: 'flex items-center gap-2' },
+                    e('span', { className: 'rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-zinc-200' }, entry.status),
+                    score ? e('span', { className: 'rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-300' }, `score ${score}/5`) : null
+                  )
+                )
+              )
+            );
+          })) : e(EmptyHint)
+        )
+      );
+    }
+
+    function Field({ label, value }) {
+      return e('div', { className: 'rounded-2xl border border-white/10 bg-black/35 p-3' },
+        e('p', { className: 'text-xs uppercase tracking-[0.18em] text-zinc-500' }, label),
+        e('p', { className: 'mt-1 break-words font-semibold text-zinc-100' }, String(value || 'not set'))
+      );
+    }
+
+    function FindingCard({ title, items, tone }) {
+      const tones = {
+        green: 'border-green-500/30 bg-green-500/10 text-green-200',
+        amber: 'border-amber-500/30 bg-amber-500/10 text-amber-200',
+        blue: 'border-blue-500/30 bg-blue-500/10 text-blue-200'
+      };
+      return e('div', { className: cx('rounded-2xl border p-4', tones[tone]) },
+        e('h3', { className: 'mb-3 font-semibold text-white' }, title),
+        items && items.length ? e('ul', { className: 'space-y-2 text-sm' }, items.map((item) => e('li', { key: item }, item))) : e(EmptyHint)
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(e(App));
+  </script>
+</body>
+</html>
