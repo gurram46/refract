@@ -1,31 +1,44 @@
-# [Concept Name]
+# [Game Theory Concept Name]
 
-## The Story
-[This section will contain the story-first explanation of the concept.]
+## Purpose
+[One sentence explaining what game theory idea this file teaches and why it matters in software systems.]
+
+## Layer
+[Mark one: foundational for everyone, applied for intermediate+, or advanced for expert.]
+
+## Core Idea
+[Explain the idea in beginner-safe language with every technical term defined inline.]
+
+## Players
+[Identify who is making decisions in the current software or system context.]
+
+## Rules
+[Describe the constraints, limits, incentives, or protocols that shape player behavior.]
+
+## Outcomes
+[Explain what happens when every player follows their own incentive.]
+
+## Failure Mode
+[Describe what breaks when the rules create bad incentives, congestion, unfairness, or unstable behavior.]
+
+## Better Mechanism
+[Explain how changing the data structure, queue, API rule, pricing rule, retry rule, or coordination rule changes behavior.]
 
 ## Visual
-[This section will contain a Mermaid or ASCII diagram for the concept.]
+[Generate an ASCII or Mermaid visual that fits the current concept. Do not reuse a canned diagram.]
 
-## Go Implementation
-[This section will contain a Go code placeholder for the concept.]
+## Software Connection
+[Connect this game theory idea to DSA, backend, system design, or distributed systems.]
 
-## DSA Pattern
-[This section will explain the DSA pattern connected to the concept.]
+## Teaching Guidance For Claude/GPT
+- Read `game-theory/concepts.md` before writing this section.
+- Generate a fresh story from the current concept and user context.
+- Do not reuse canned stories from previous concept files.
+- Keep the story concrete: players, rules, incentives, outcome, fix.
+- For beginner thinkers, use only foundational ideas.
+- For intermediate thinkers, include system incentives and congestion only when useful.
+- For expert thinkers, include distributed, adversarial, or market-style behavior only when the concept supports it.
+- Do not add academic labels unless immediately explained inline.
 
-## Backend + SQL Connection
-[This section will explain how the concept maps to backend and SQL work.]
-
-## System Design Angle
-[This section will explain the system-design trade-off or architecture connection.]
-
-## Game Theory Angle
-[This section will explain the strategic decision-making angle of the concept.]
-
-## Interview Problem
-Company: [e.g. Google, Amazon]
-Problem: [This field will name the documented interview problem.]
-LeetCode: Easy — [link] | Medium — [link] | Hard — [link]
-SD Equivalent: [This field will link or describe the system-design equivalent question.]
-
-## User Practice Problem
-[This section will contain a practice problem that builds on the explained example.]
+## User Check
+[Ask one practical question that checks whether the user can identify the players, incentives, or failure mode.]
