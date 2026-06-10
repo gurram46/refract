@@ -15,7 +15,7 @@ No platform. No subscription. Just fork and start.
 
 Every concept is taught through five lenses:
 
-Go → DSA → Backend + SQL → System Design → Game Theory
+Language → DSA → Backend + SQL → System Design → Game Theory
 
 Same concept. Different depth. One story.
 
@@ -52,7 +52,7 @@ Local mode works for private repos without GitHub tokens.
 ## Who is this for
 
 - Complete beginners — no coding experience needed
-- Developers learning Go — refresh fundamentals with depth
+- Developers learning a language — refresh fundamentals with depth
 - Interview preppers — DSA patterns + real company problems
 - Curious people — understand how systems actually work
 
@@ -65,8 +65,8 @@ onboarding/     ← start here, runs once
 dsa/            ← concept files, one pattern per file
 system-design/  ← SD concepts connected to DSA
 game-theory/    ← strategic thinking layer
-backend/go/     ← real server + SQL code
-languages/go/   ← Go implementation per concept
+backend/        ← real server + SQL code
+languages/      ← language implementation per concept
 prompts/        ← paste into Claude to start session
 profile.md      ← your learning profile, auto-updated
 progress.md     ← your session log, auto-updated

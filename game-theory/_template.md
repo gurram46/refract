@@ -1,7 +1,7 @@
 # [Game Theory Concept Name]
 
 ## Five Lens Teaching Contract
-[Even when this starts from game theory, connect it back to DSA, Go or pseudocode, Backend + SQL, and System Design. Do not teach game theory in isolation.]
+[Even when this starts from game theory, connect it back to DSA, selected language or pseudocode, Backend + SQL, and System Design. Do not teach game theory in isolation.]
 
 ## Purpose
 [One sentence explaining what game theory idea this file teaches and why it matters in software systems.]

@@ -53,7 +53,7 @@ If visual_preference is low — lead with words, visual optional.
 If goal is interview — emphasize patterns and time complexity.
 If goal is startup — emphasize backend use case and shipping.
 If goal is systems — emphasize the why, not the how.
-If language_track is none — pseudocode only, no Go.
+If language_track is none — pseudocode only, no language-specific code.
 
 ---
 
@@ -63,7 +63,7 @@ Load the concept file for next_concept from profile.md.
 Teach it following RULES.md exactly.
 Before teaching, enforce the Five Lens Teaching Contract:
 - Start with the story and visual.
-- Teach the Go concept or pseudocode if language_track is none.
+- Teach the selected language concept or pseudocode if language_track is none.
 - Teach the DSA pattern.
 - Teach the Backend + SQL connection.
 - Teach the System Design angle.
@@ -89,6 +89,6 @@ After user completes practice problem:
 - If any file cannot be fetched — ask user to paste raw content
 - Total response budget: 800 tokens per response
 - Every concept must have a visual — no exceptions
-- Every concept must include all five lenses — Go/pseudocode, DSA, Backend + SQL, System Design, and Game Theory
+- Every concept must include all five lenses — selected language/pseudocode, DSA, Backend + SQL, System Design, and Game Theory
 - Session ends only after practice problem is attempted and 
   progress.md is updated

@@ -144,11 +144,12 @@ Ask exactly this:
 2. Just DSA and problem solving, no specific language
 3. Something else"
 
-1 → language_track: go
+1 → language_track: selected
 2 → language_track: none
-3 → language_track: go
+3 → language_track: selected
 
 If language_track: none, teach in pure DSA mode with pseudocode only.
+If language_track: selected, use the repo's current language track or ask for the preferred language only if no track is configured.
 
 ---
 
@@ -204,7 +205,7 @@ mode: [beginner | intermediate | expert] ← use thinking_level
 coding_level: [beginner | intermediate | expert]
 thinking_level: [beginner | intermediate | expert]
 visual_preference: [high | medium | low]
-language_track: [go | none]
+language_track: [selected | none]
 started: [today's date]
 last_session: [today's date]
 current_concept: queues
