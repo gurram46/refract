@@ -1,5 +1,8 @@
 # [Game Theory Concept Name]
 
+## Five Lens Teaching Contract
+[Even when this starts from game theory, connect it back to DSA, Go or pseudocode, Backend + SQL, and System Design. Do not teach game theory in isolation.]
+
 ## Purpose
 [One sentence explaining what game theory idea this file teaches and why it matters in software systems.]
 
@@ -32,6 +35,7 @@
 
 ## Teaching Guidance For Claude/GPT
 - Read `game-theory/concepts.md` before writing this section.
+- Preserve the Five Lens Teaching Contract even when the game theory angle is the entry point.
 - Generate a fresh story from the current concept and user context.
 - Do not reuse canned stories from previous concept files.
 - Keep the story concrete: players, rules, incentives, outcome, fix.

@@ -1,5 +1,8 @@
 # [Concept Name]
 
+## Five Lens Teaching Contract
+[This concept must be taught as one connected story across Go or pseudocode, DSA, Backend + SQL, System Design, and Game Theory. Do not teach only one lens.]
+
 ## The Story
 [This section will contain the story-first explanation of the concept.]
 
