@@ -151,3 +151,27 @@ The iframe renders into a div, not directly into a canvas:
 - Text centered
 - Highlight accepts `{ row, col, color }`
 - If too wide, scale table down to fit canvas width
+
+### plot(config)
+
+- Draws axes and numeric points for ML/data/math concepts.
+- Accepts `points: [{ x, y, color, r }]`.
+- Accepts optional `xRange`, `yRange`, `xLabel`, `yLabel`, `line`, and `color`.
+- Draws connected line unless `line: false`.
+- Points are mapped into the plot area without mutating the original values.
+
+### neuralNetwork(config)
+
+- Draws model architecture diagrams for ML concepts.
+- Accepts `layers: [inputCount, hiddenCount, outputCount]`.
+- Accepts optional `labels` and `layerLabels`.
+- Layers are evenly spaced left to right.
+- Nodes are evenly spaced vertically within each layer.
+- Adjacent layers are fully connected with low-contrast edges.
+
+### timeline(config)
+
+- Draws ordered conceptual stages for pipelines, learning flows, training loops, and system lifecycles.
+- Accepts `steps: []`.
+- Accepts optional `active` index.
+- Active step is larger and uses success color.

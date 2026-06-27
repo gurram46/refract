@@ -45,6 +45,9 @@ Available helpers:
 - `c.graph({nodes, edges, directed})`
 - `c.grid({rows, cols, highlight})`
 - `c.table({headers, rows, highlight})`
+- `c.plot({points, xRange, yRange, xLabel, yLabel})`
+- `c.neuralNetwork({layers, labels, layerLabels})`
+- `c.timeline({steps, active})`
 
 Building blocks:
 - `c.box(x, y, w, h, options)`

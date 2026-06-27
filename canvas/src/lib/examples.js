@@ -141,5 +141,81 @@ c.table({
 c.caption("Changing the rule changes the group outcome")
 c.render()
 \`\`\``
+  },
+  {
+    title: "ML Loss",
+    text: `Gradient descent is easier to understand when you can see loss falling over training steps.
+
+\`\`\`refract-canvas
+const c = new RefractCanvas(640, 360)
+
+c.plot({
+  points: [
+    { x: 0, y: 9.2 },
+    { x: 1, y: 6.8 },
+    { x: 2, y: 4.9 },
+    { x: 3, y: 3.6 },
+    { x: 4, y: 2.7 },
+    { x: 5, y: 2.2 },
+    { x: 6, y: 1.9 }
+  ],
+  xRange: [0, 6],
+  yRange: [0, 10],
+  xLabel: "training step",
+  yLabel: "loss",
+  color: "#22c55e"
+})
+
+c.animate([
+  { caption: "Early updates reduce error quickly" },
+  { caption: "Later updates improve more slowly" }
+])
+
+c.caption("Loss curve: the model is learning when the line goes down")
+c.render()
+\`\`\``
+  },
+  {
+    title: "Neural Net",
+    text: `A neural network is layers of simple units. Each layer transforms the signal before the final prediction.
+
+\`\`\`refract-canvas
+const c = new RefractCanvas(660, 380)
+
+c.neuralNetwork({
+  layers: [4, 6, 3],
+  layerLabels: ["Inputs", "Hidden features", "Prediction"],
+  labels: [
+    ["x1", "x2", "x3", "x4"],
+    ["", "", "", "", "", ""],
+    ["A", "B", "C"]
+  ]
+})
+
+c.caption("Architecture view: data flows left to right through learned weights")
+c.render()
+\`\`\``
+  },
+  {
+    title: "Pipeline",
+    text: `Most technical topics are pipelines: input, transformation, feedback, and output.
+
+\`\`\`refract-canvas
+const c = new RefractCanvas(680, 300)
+
+c.timeline({
+  steps: ["Data", "Features", "Train", "Evaluate", "Ship"],
+  active: 2
+})
+
+c.animate([
+  { caption: "Raw data becomes useful features" },
+  { caption: "Training adjusts the model" },
+  { caption: "Evaluation decides whether it ships" }
+])
+
+c.caption("A timeline can explain ML, backend pipelines, or learning plans")
+c.render()
+\`\`\``
   }
 ];

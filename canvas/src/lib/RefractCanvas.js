@@ -24,6 +24,11 @@ export class RefractCanvas {
     this.svg = null;
     this.ctx = null;
     this.timer = null;
+    this.raf = null;
+    this.isPlaying = false;
+    this.stepStartedAt = 0;
+    this.stepDuration = 900;
+    this.layouts = {};
   }
 
   theme(config = {}) {
@@ -58,6 +63,21 @@ export class RefractCanvas {
 
   table(config = {}) {
     this.drawOps.push((ctx) => this.drawTable(ctx, config));
+    return this;
+  }
+
+  plot(config = {}) {
+    this.drawOps.push((ctx) => this.drawPlot(ctx, config));
+    return this;
+  }
+
+  neuralNetwork(config = {}) {
+    this.drawOps.push((ctx) => this.drawNeuralNetwork(ctx, config));
+    return this;
+  }
+
+  timeline(config = {}) {
+    this.drawOps.push((ctx) => this.drawTimeline(ctx, config));
     return this;
   }
 
@@ -181,23 +201,45 @@ export class RefractCanvas {
   play() {
     if (!this.steps.length) return;
     this.pause();
-    this.timer = window.setInterval(() => this.nextStep(), 900 / this.speed);
+    if (this.currentStep === 0) this.currentStep = 1;
+    this.isPlaying = true;
+    this.stepStartedAt = performance.now();
+    const tick = (now) => {
+      if (!this.isPlaying) return;
+      const duration = this.stepDuration / this.speed;
+      if (now - this.stepStartedAt >= duration) {
+        this.currentStep += 1;
+        if (this.currentStep > this.steps.length) {
+          this.currentStep = this.steps.length;
+          this.pause();
+        }
+        this.stepStartedAt = now;
+      }
+      this.redraw();
+      if (this.isPlaying) this.raf = window.requestAnimationFrame(tick);
+    };
+    this.raf = window.requestAnimationFrame(tick);
   }
 
   pause() {
     if (this.timer) window.clearInterval(this.timer);
+    if (this.raf) window.cancelAnimationFrame(this.raf);
     this.timer = null;
+    this.raf = null;
+    this.isPlaying = false;
   }
 
   nextStep() {
     if (!this.steps.length) return;
     this.currentStep = Math.min(this.currentStep + 1, this.steps.length);
+    this.stepStartedAt = performance.now();
     this.redraw();
   }
 
   prevStep() {
     if (!this.steps.length) return;
     this.currentStep = Math.max(this.currentStep - 1, 0);
+    this.stepStartedAt = performance.now();
     this.redraw();
   }
 
@@ -256,6 +298,7 @@ export class RefractCanvas {
     const totalW = items.length * boxW + Math.max(0, items.length - 1) * gap;
     const startX = (this.width - totalW) / 2;
     const y = this.height / 2 - boxH / 2 - 18;
+    this.layouts.queue = { items, boxW, boxH, gap, startX, y, totalW };
 
     items.forEach((item, index) => {
       const x = startX + index * (boxW + gap);
@@ -282,6 +325,7 @@ export class RefractCanvas {
     const totalH = visible.length * boxH + Math.max(0, visible.length - 1) * gap;
     const x = this.width / 2 - boxW / 2;
     const bottomY = this.height / 2 + totalH / 2;
+    this.layouts.stack = { items: visible, boxW, boxH, gap, x, bottomY, totalH };
 
     visible.forEach((item, index) => {
       const y = bottomY - (index + 1) * boxH - index * gap;
@@ -433,6 +477,127 @@ export class RefractCanvas {
     });
   }
 
+  drawPlot(ctx, config) {
+    const points = Array.isArray(config.points) ? config.points : [];
+    const x = Number(config.x) || 58;
+    const y = Number(config.y) || 46;
+    const w = Number(config.width) || this.width - 110;
+    const h = Number(config.height) || this.height - 120;
+    const xValues = points.map((point) => Number(point.x));
+    const yValues = points.map((point) => Number(point.y));
+    const xMin = config.xRange?.[0] ?? Math.min(...xValues, 0);
+    const xMax = config.xRange?.[1] ?? Math.max(...xValues, 1);
+    const yMin = config.yRange?.[0] ?? Math.min(...yValues, 0);
+    const yMax = config.yRange?.[1] ?? Math.max(...yValues, 1);
+    const mapX = (value) => x + ((value - xMin) / Math.max(1e-9, xMax - xMin)) * w;
+    const mapY = (value) => y + h - ((value - yMin) / Math.max(1e-9, yMax - yMin)) * h;
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.22)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y + h);
+    ctx.lineTo(x + w, y + h);
+    ctx.stroke();
+
+    this.drawText(ctx, config.xLabel || "x", x + w / 2, y + h + 34, { color: this.themeConfig.muted, size: 12 });
+    this.drawText(ctx, config.yLabel || "y", x - 28, y + h / 2, { color: this.themeConfig.muted, size: 12 });
+
+    if (config.line !== false && points.length > 1) {
+      ctx.strokeStyle = config.color || this.themeConfig.accent;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      points.forEach((point, index) => {
+        const px = mapX(Number(point.x));
+        const py = mapY(Number(point.y));
+        if (index === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      });
+      ctx.stroke();
+    }
+
+    points.forEach((point) => {
+      ctx.fillStyle = point.color || config.color || this.themeConfig.accent;
+      ctx.beginPath();
+      ctx.arc(mapX(Number(point.x)), mapY(Number(point.y)), Number(point.r) || 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  drawNeuralNetwork(ctx, config) {
+    const layers = Array.isArray(config.layers) ? config.layers : [];
+    if (!layers.length) return;
+    const left = 70;
+    const right = this.width - 70;
+    const top = 62;
+    const bottom = this.height - 88;
+    const positions = [];
+
+    layers.forEach((count, layerIndex) => {
+      const safeCount = Math.max(1, Math.min(12, Number(count) || 1));
+      const x = layers.length === 1 ? this.width / 2 : left + ((right - left) * layerIndex) / (layers.length - 1);
+      const layer = [];
+      for (let i = 0; i < safeCount; i += 1) {
+        const y = safeCount === 1 ? (top + bottom) / 2 : top + ((bottom - top) * i) / (safeCount - 1);
+        layer.push({ x, y });
+      }
+      positions.push(layer);
+    });
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.16)";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < positions.length - 1; i += 1) {
+      positions[i].forEach((from) => {
+        positions[i + 1].forEach((to) => this.drawLine(ctx, from, to));
+      });
+    }
+    positions.forEach((layer, layerIndex) => {
+      layer.forEach((node, nodeIndex) => {
+        const label = config.labels?.[layerIndex]?.[nodeIndex] || "";
+        this.drawCircle(ctx, node.x, node.y, 16, { label, id: `nn-${layerIndex}-${nodeIndex}` });
+      });
+    });
+    const layerNames = config.layerLabels || ["Input", "Hidden", "Output"];
+    positions.forEach((layer, index) => {
+      this.drawText(ctx, layerNames[index] || `Layer ${index + 1}`, layer[0].x, this.height - 38, {
+        color: this.themeConfig.muted,
+        size: 12
+      });
+    });
+    ctx.restore();
+  }
+
+  drawTimeline(ctx, config) {
+    const steps = Array.isArray(config.steps) ? config.steps : [];
+    if (!steps.length) return;
+    const x = 60;
+    const y = this.height / 2;
+    const w = this.width - 120;
+    const active = Number.isFinite(config.active) ? config.active : -1;
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.22)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + w, y);
+    ctx.stroke();
+
+    steps.forEach((step, index) => {
+      const px = steps.length === 1 ? x + w / 2 : x + (w * index) / (steps.length - 1);
+      const isActive = index === active;
+      this.drawCircle(ctx, px, y, isActive ? 18 : 13, {
+        fill: this.alpha(isActive ? this.themeConfig.success : this.themeConfig.accent, isActive ? 0.35 : 0.2),
+        label: String(index + 1)
+      });
+      this.drawText(ctx, String(step), px, y + 42, { color: this.themeConfig.fg, size: 12 });
+    });
+    ctx.restore();
+  }
+
   drawBox(ctx, x, y, w, h, options = {}) {
     ctx.save();
     ctx.fillStyle = options.fill || this.alpha(this.themeConfig.accent, 0.2);
@@ -519,10 +684,63 @@ export class RefractCanvas {
   drawCurrentStep() {
     if (!this.steps.length || this.currentStep === 0) return;
     const step = this.steps[this.currentStep - 1];
+    const progress = this.isPlaying
+      ? Math.min(1, Math.max(0, (performance.now() - this.stepStartedAt) / (this.stepDuration / this.speed)))
+      : 1;
     if (typeof step.fn === "function") {
-      step.fn(this.ctx, this);
-    } else if (step.caption) {
-      this.drawText(this.ctx, step.caption, this.width / 2, this.height - 44, { color: this.themeConfig.accent, size: 14 });
+      step.fn(this.ctx, this, progress);
+    } else {
+      this.drawBuiltInStep(step, progress);
+      if (step.caption) {
+        this.drawText(this.ctx, step.caption, this.width / 2, this.height - 44, { color: this.themeConfig.accent, size: 14 });
+      }
+    }
+  }
+
+  drawBuiltInStep(step, progress) {
+    if (step.action === "enqueue" && this.layouts.queue) {
+      const layout = this.layouts.queue;
+      const start = { x: this.width + 20, y: layout.y };
+      const end = { x: layout.startX + layout.totalW + layout.gap, y: layout.y };
+      const x = start.x + (end.x - start.x) * progress;
+      this.drawBox(this.ctx, x, end.y, layout.boxW, layout.boxH, {
+        label: step.item || "new",
+        fill: this.alpha(this.themeConfig.success, 0.25),
+        stroke: this.themeConfig.success
+      });
+    }
+
+    if (step.action === "dequeue" && this.layouts.queue) {
+      const layout = this.layouts.queue;
+      const x = layout.startX - progress * 90;
+      const y = layout.y - progress * 46;
+      this.drawBox(this.ctx, x, y, layout.boxW, layout.boxH, {
+        label: step.item || layout.items[0] || "front",
+        fill: this.alpha(this.themeConfig.danger, 0.24),
+        stroke: this.themeConfig.danger
+      });
+    }
+
+    if (step.action === "push" && this.layouts.stack) {
+      const layout = this.layouts.stack;
+      const targetY = layout.bottomY - (layout.items.length + 1) * layout.boxH - layout.items.length * layout.gap;
+      const y = -layout.boxH + (targetY + layout.boxH) * progress;
+      this.drawBox(this.ctx, layout.x, y, layout.boxW, layout.boxH, {
+        label: step.item || "new",
+        fill: this.alpha(this.themeConfig.success, 0.25),
+        stroke: this.themeConfig.success
+      });
+    }
+
+    if (step.action === "pop" && this.layouts.stack) {
+      const layout = this.layouts.stack;
+      const topY = layout.bottomY - layout.items.length * layout.boxH - (layout.items.length - 1) * layout.gap;
+      const x = layout.x + progress * 120;
+      this.drawBox(this.ctx, x, topY, layout.boxW, layout.boxH, {
+        label: step.item || layout.items[layout.items.length - 1] || "top",
+        fill: this.alpha(this.themeConfig.danger, 0.24),
+        stroke: this.themeConfig.danger
+      });
     }
   }
 
