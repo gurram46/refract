@@ -1,0 +1,21 @@
+{
+  "name": "refract-canvas",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "d3": "^7.9.0",
+    "p5": "^2.1.1",
+    "vite": "^7.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@monaco-editor/react": "^4.7.0"
+  },
+  "devDependencies": {}
+}

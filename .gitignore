@@ -24,6 +24,8 @@ build/
 coverage/
 .tmp/
 tmp/
+canvas/node_modules/
+canvas/dist/
 
 # Language-specific caches
 __pycache__/

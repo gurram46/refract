@@ -18,3 +18,5 @@ These are the hard rules every AI model must follow when teaching from this repo
 14. Five Lens Teaching is mandatory: every concept must cover Story/Visual, selected language or pseudocode, DSA pattern, Backend + SQL, System Design, and Game Theory in one connected flow.
 15. Never teach only one lens. Do not stop at only DSA, only language syntax, only backend, or only system design.
 16. If a learner level requires skipping an advanced section, replace it with one beginner-safe sentence that preserves the lens instead of deleting the lens entirely.
+17. Every concept explanation must include a `refract-canvas` block. Use RefractCanvas helpers for standard DSA concepts. Use `c.p5()`, `c.d3()`, or `c.raw()` when helpers cannot express the visual cleanly.
+18. `refract-canvas` blocks must be self-contained and executable. Do not reference variables outside the block. Do not import p5 or D3; they are preloaded. Create the canvas with `const c = new RefractCanvas(width, height)` and end with `c.render()` unless using a full custom p5 loop.

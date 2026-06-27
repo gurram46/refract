@@ -22,6 +22,51 @@ Never ask for the fork URL again after first session.
 
 ---
 
+## Canvas API
+
+Every concept must include one executable visual block:
+
+````md
+```refract-canvas
+const c = new RefractCanvas(600, 400)
+c.queue({
+  items: ["Order 1", "Order 2", "Order 3"],
+  labels: { left: "FRONT", right: "BACK" }
+})
+c.caption("FIFO: first in, first out")
+c.render()
+```
+````
+
+Available helpers:
+- `c.queue({items, labels, direction})`
+- `c.stack({items, maxHeight})`
+- `c.tree({nodes, edges})`
+- `c.graph({nodes, edges, directed})`
+- `c.grid({rows, cols, highlight})`
+- `c.table({headers, rows, highlight})`
+
+Building blocks:
+- `c.box(x, y, w, h, options)`
+- `c.circle(x, y, r, options)`
+- `c.arrow(from, to, options)`
+- `c.label(x, y, text, options)`
+- `c.caption(text)`
+- `c.highlight(id, color)`
+
+Animation:
+- `c.animate(steps)`
+- `c.step(caption, drawFn)`
+
+Full freedom:
+- `c.p5(sketch => {...})`
+- `c.d3(fn)`
+- `c.raw(fn)`
+
+Use helpers for simple DSA visuals. Use escape hatches for simulations, game theory, custom system diagrams, and complex animations.
+
+---
+
 ## STEP 2 — Reconstruct last session
 
 Read the last entry in progress.md.
