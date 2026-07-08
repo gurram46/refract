@@ -1,201 +1,158 @@
-# Engineering Standards
+# Refract Engineering Standards
 
-How we keep this repo sane. Read this before changing code.
+These standards apply to the active Refract product path.
 
----
+## Product boundary
 
-## 1. Core Principles
+Refract is local-first and artifact-first.
 
-- Prefer boring, obvious code.
-- Keep changes scoped. One PR, one purpose.
-- Make the happy path easy to read.
-- Do not add abstractions before there are at least two real call sites.
-- Preserve Visual Mode even when changing Practice Mode.
-- Runner code must stay local-first and safe by default.
+Active product directories:
 
----
-
-## 2. Repository Boundaries
-
-| Location | What goes here |
-|---|---|
-| Root markdown | README, CONTRIBUTING, RULES, progress, profile, code-quality |
-| `dsa/` | Data structure and algorithm concept files |
-| `system-design/` | System design concepts connected to DSA |
-| `game-theory/` | Strategic thinking concepts |
-| `backend/` | Real server and SQL code per language |
-| `languages/` | Language-specific concept templates |
-| `prompts/` | Session start prompts for AI models |
-| `profile-site/` | Profile dashboard frontend |
-| `canvas/src/` | Browser UI: Visual Mode, Practice Mode, canvas rendering |
-| `canvas/runner/` | Local Node server: run code, evaluate, serve lessons |
-
-Do not mix concerns across these boundaries. If a change touches `canvas/src/` and `dsa/` at the same time, it is probably too broad.
-
----
-
-## 3. Canvas UI Standards
-
-- Visual Mode must work without the local runner.
-- Practice Mode may depend on the runner.
-- Keep UI states explicit: loading, ready, error, empty.
-- Do not hide errors. Show them with enough context to act on.
-- Avoid nesting panels inside panels.
-- Keep text short and concrete.
-- Controls should say what they do. "Run Tests", not "Execute".
-
----
-
-## 4. Runner Standards
-
-- Runner binds only to `127.0.0.1`.
-- No silent installs. If a runtime is missing, show install instructions.
-- No global file writes unless the user asks.
-- Execute user code in temp workspaces. Clean up after each run.
-- Always use timeouts. Five seconds is the current default.
-- Return JSON from every endpoint.
-- Missing resources return 404, not 500. Example: `GET /lesson/nope` returns `{ "error": "Lesson not found" }` with status 404.
-- User errors return clear messages.
-- Never log API keys.
-
----
-
-## 5. Runtime Adapter Standards
-
-Every adapter must expose the same shape:
-
-- `detect()` — check if the runtime is installed
-- `run()` — execute code and return results
-- `trace()` — extract trace events from output
-- `installInstructions()` — return setup steps for a missing runtime
-- `formatError()` — turn a runtime error into a readable message
-
-For v0.2, only JavaScript is implemented in `canvas/runner/adapters/javascript.js`. Future Go, Python, and SQL adapters must follow the same contract.
-
----
-
-## 6. Trace Event Standards
-
-User code emits trace events through `console.log`:
-
-```
-REFRACT_TRACE: {"type":"queue.enqueue","value":"A"}
+```text
+profiles/      learner archetype prompts
+topics/        topic prompt files and lens connections
+references/    curated reference links
+generated/     ignored generated artifact/audio cache
+packs/         seed artifact data during transition
+backend/       local API, generation, validation, runner, provider routing
+frontend/      artifact workbench UI and fixed visual primitives
+docs/          specs and engineering contracts
 ```
 
-Rules:
+Removed/deprecated path:
 
-- Trace lines must start with `REFRACT_TRACE:`.
-- JSON after the prefix must be valid.
-- The parser ignores normal stdout lines.
-- Malformed trace lines should not crash the run. Push them into visible output instead.
-- Event names use `domain.action` format:
-  - `queue.enqueue`
-  - `queue.dequeue`
-  - `stack.push`
-  - `stack.pop`
-  - `http.request`
-  - `ml.loss`
-  - `game.choice`
+```text
+canvas/        deleted from active product path
+```
 
-The parser lives in `canvas/runner/trace/parser.js`. It splits stdout into trace events and visible output.
+Do not rebuild inside `canvas/`. If old canvas ideas are useful, recover them from git history and port only the specific primitive or pattern into `frontend/`/`backend/` with tests.
 
----
+## Core architecture rule
 
-## 7. Lesson Standards
+Generated artifacts are data, not trusted rendering code.
 
-Lesson files live in `canvas/runner/lessons/`.
+The model may generate:
 
-Rules:
+- story/explanation markdown,
+- audio narration script,
+- lens summaries,
+- structured visual specs,
+- practice starter code and tests,
+- references and next-topic links.
 
-- One lesson per JSON file.
-- File name is the lesson id. `queues-js.json` becomes the id `queues-js`.
-- IDs use lowercase letters, numbers, and hyphens.
-- Do not put generated code fences inside model-generated JSON unless already validated.
-- Each lesson must include these fields:
-  - `id`
-  - `domain`
-  - `language`
-  - `concept`
-  - `explanation`
-  - `visualBlock`
-  - `practice.prompt`
-  - `practice.starterCode`
-  - `practice.tests`
-  - `rubric`
+The model must not generate arbitrary executable HTML/JS for normal artifacts.
 
-Starter code must include `trace.event(...)` calls or comments hinting at them. Without trace events, tests pass but the visual trace stays empty.
+The frontend owns fixed visual primitives such as:
 
----
+```text
+queue
+stack
+hashmap
+graph
+timeline
+pipeline
+vector-space
+matrix
+```
 
-## 8. Harness / Evaluator Standards
+A topic may only request visual kinds listed in its own `allowedVisualKinds` frontmatter.
 
-The evaluator sends code and test results to an OpenAI-compatible API and returns feedback.
+## Local-first rule
 
-Rules:
+The app must run from a clone without hosted infrastructure.
 
-- Start with OpenAI-compatible API only.
-- API keys stay local. Never sent to the runner logs or any external service besides the configured provider.
-- Missing evaluator config returns `{ status: "not_configured", success: false }`.
-- Provider failure returns `{ status: "request_failed", success: false }`.
-- Empty model output returns `{ status: "empty_response", success: false }`.
-- Successful evaluation returns `{ status: "ok", success: true }`.
-- Do not add CLI harness wrappers until the local practice loop is stable.
+Do not add these unless explicitly re-scoped:
 
-The harness lives in `canvas/runner/harness/openai-compatible.js`.
+- multi-tenant auth,
+- teacher/admin dashboards,
+- billing,
+- hosted classroom management,
+- public account system.
 
----
+## Prompt-authored artifact pipeline
 
-## 9. Error Handling
+The source of learning content is Markdown prompt files plus profile files.
 
-Rules:
+Expected future flow:
 
-- Prefer explicit error objects over thrown strings.
-- Frontend should show actionable errors. Tell the user what to do next.
-- Backend should return status codes that match the problem.
-- `404` for missing lesson.
-- `400` for bad input.
-- `500` only for unexpected internal failure.
-- When `loadLesson` cannot find the file, return 404 JSON. Do not let it bubble into a 500.
+```text
+profile + topic
+→ backend loads profile/topic/reference prompts
+→ backend applies strict JSON output contract
+→ provider returns generated artifact JSON
+→ backend validates schema and visual kind
+→ backend caches under generated/
+→ frontend renders with fixed primitives
+```
 
----
+No page load may silently regenerate a cached artifact. Regeneration is a deliberate admin/developer action.
 
-## 10. Testing Checklist
+## Validation rule
 
-Before saying a change is done:
+Never show broken generated artifacts to beginner users.
 
-- `npm run build` from `canvas/` passes.
-- Runner syntax check: `node --check canvas/runner/server.js`.
-- `GET /health` returns 200.
-- `GET /lesson/queues-js` returns the lesson JSON.
-- `GET /lesson/nope` returns 404.
-- `POST /run` with a passing JS solution returns `success: true`.
-- `POST /run` with a failing JS solution returns `success: false`.
-- Visual Mode still renders a `refract-canvas` block.
+Validation must check:
 
----
+- valid JSON,
+- required fields,
+- profile/topic match,
+- `schemaVersion === 1`,
+- visual kind is allowed by the topic,
+- no raw executable HTML/JS fields,
+- practice language allowed for the profile/topic,
+- references are treated as untrusted strings.
 
-## 11. Human Review Checklist
+If validation fails, retry once with error context. If it still fails, return a clean text/static fallback instead of crashing or showing provider jargon.
 
-Use this when reviewing a PR:
+## Backend standards
 
-- Does this make the project easier to understand?
-- Is the change smaller than it could be? Can we cut scope?
-- Are errors visible to the user?
-- Did we keep Visual Mode independent of the runner?
-- Did we avoid adding a new abstraction too early?
-- Would a beginner understand the UI text?
-- Can a future maintainer delete this easily if it fails?
+- Keep provider secrets backend-only.
+- Never expose or log API keys.
+- Keep request body limits.
+- Keep runner timeouts.
+- Keep stdout/stderr caps.
+- Keep temp workspace cleanup.
+- Store progress/cache as local files for now; no external DB.
 
----
+## Frontend standards
 
-## 12. Writing Style
+- Beginner mode shows no provider setup, BYOK, or model jargon by default.
+- Artifact workspace is the main event; tutor is secondary.
+- Use accessible tabs and controls.
+- Keep components small and owned by one purpose.
+- Do not add large UI frameworks without review.
+- Fixed visual primitives must be deterministic and testable.
 
-Rules for docs and UI copy:
+## Quality bar
 
-- Use short sentences.
-- Say exactly what the user should do.
-- Avoid hype.
-- Avoid fake enthusiasm.
-- Avoid generic AI phrasing.
-- Prefer examples over explanation.
-- Do not write these words: seamless, robust, unlock, elevate, delve, utilize, leverage, revolutionary, game-changing, cutting-edge.
+Every meaningful concept should eventually provide:
+
+- visual explanation,
+- interactive explore state,
+- audio script,
+- hands-on practice,
+- test feedback,
+- review/rubric,
+- references,
+- connected lenses across DSA/backend/system design/game theory/language/ML where relevant.
+
+Weak artifacts are not acceptable:
+
+- wall-of-text only,
+- generic static diagram when an interactive primitive exists,
+- missing audio script,
+- missing practice path,
+- broken JSON,
+- raw model-written JS,
+- unverified/hallucinated links.
+
+## Verification
+
+Before claiming done, run the relevant commands:
+
+```bash
+cd backend && npm test
+cd frontend && npm run build
+```
+
+For spec/docs-only changes, verify the exact changed behavior where possible, such as `git check-ignore -v` for ignore-rule updates.

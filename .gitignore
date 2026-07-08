@@ -26,9 +26,6 @@ build/
 coverage/
 .tmp/
 tmp/
-canvas/node_modules/
-canvas/dist/
-canvas/runner/data/progress/*.json
 backend/data/
 backend/.tmp-smoke-data/
 

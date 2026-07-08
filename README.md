@@ -1,105 +1,115 @@
 # Refract
 
-One concept. Five lenses. Your own pace.
+Refract is a local-first AI artifact learning workbench for visual, audio, and hands-on learners.
 
-Refract is an open source learning system that teaches DSA, 
-System Design, Game Theory, and Backend development as one 
-connected story — not four separate subjects.
+The goal is not a dashboard and not a normal lesson app. Refract turns topic prompts into durable learning artifacts: explanation, visual model, interaction, practice code, tests, audio script, review, and next steps.
 
-Claude or GPT is your teacher. This repo is your memory.
-No platform. No subscription. Just fork and start.
+Current direction:
 
----
-
-## How it works
-
-Every concept is taught through five lenses:
-
-Language → DSA → Backend + SQL → System Design → Game Theory
-
-Same concept. Different depth. One story.
-
----
-
-## Start in 60 seconds
-
-1. Fork this repo
-2. Open Claude or GPT
-3. Paste the contents of prompts/session-start.md
-4. Give Claude your fork URL when asked
-5. Answer 4 onboarding questions
-6. Start learning
-
-That's it. Come back tomorrow, paste session-start.md again.
-Claude picks up exactly where you left off.
-
----
-
-## Private repo or local study
-
-For personal learning, use your own fork or private clone.
-Keep this repo as the open-source curriculum.
-
-The profile dashboard supports two modes:
-
-1. Public fork URL — paste your GitHub fork URL
-2. Local files — upload profile.md, progress.md, and code-quality.md
-
-Local mode works for private repos without GitHub tokens.
-
----
-
-## Who is this for
-
-- Complete beginners — no coding experience needed
-- Developers learning a language — refresh fundamentals with depth
-- Interview preppers — DSA patterns + real company problems
-- Curious people — understand how systems actually work
-
----
-
-## What's inside
-
-```
-onboarding/     ← start here, runs once
-dsa/            ← concept files, one pattern per file
-system-design/  ← SD concepts connected to DSA
-game-theory/    ← strategic thinking layer
-backend/        ← real server + SQL code
-languages/      ← language implementation per concept
-prompts/        ← paste into Claude to start session
-profile.md      ← your learning profile, auto-updated
-progress.md     ← your session log, auto-updated
-code-quality.md ← your code quality trend, auto-updated
-RULES.md        ← rules every AI model follows when teaching
+```text
+Topic/Profile prompts → validated generated artifact → cached locally → rendered by trusted visual primitives
 ```
 
----
+The model generates artifact **content and structured specs**. The app owns the rendering primitives. Normal artifacts must not rely on arbitrary model-written JavaScript.
 
-## Why Game Theory
+## Who this is for
 
-DSA teaches you what to build.
-System design teaches you how to build it at scale.
-Game theory teaches you why one design wins when 
-real users, services, and systems compete for resources.
+Initial learner profiles:
 
-It's not academic. It's the missing mental model.
+- `sandeep-go-backend` — Go, DSA, backend engineering, and system design.
+- `sister-python-ai` — Python, DSA, system design, ML/DS/AI, beginner mode.
 
----
+Both profiles prioritize:
 
-## Contributing
+- visual explanation first,
+- audio narration support,
+- hands-on practice,
+- cross-links between DSA, backend, system design, ML/AI, and game-theory lenses.
 
-Read CONTRIBUTING.md before opening a PR.
-Want to add a language track? Add a folder under 
-languages/ and backend/ and follow _template.md.
-LeetCode and SD links must be human verified — no exceptions.
+## Repo shape
 
----
+```text
+profiles/      learner archetypes and teaching style prompts
 
-## Current Status
+topics/        topic prompt files and lens connections
+references/    manually curated links and study references
+generated/     ignored local cache for generated artifacts/audio
+packs/         current seed artifact data while pipeline is being built
+backend/       local API, generation, validation, runner, provider routing
+frontend/      artifact workbench UI and fixed visual primitives
+docs/          runtime/spec/engineering contracts
+```
 
-v0.1 — core loop working.
-Concept files being added one at a time.
-Profile site coming soon.
+`canvas/` was removed from the active product path. It was an old paste-a-visual/dev demo and does not match the prompt-authored cached artifact runtime. Any useful ideas should be recovered from git history and ported intentionally into `frontend/` or `backend/`.
 
-Star the repo if this helped you think differently.
+## Run locally
+
+Backend:
+
+```bash
+cd backend
+npm install
+npm start
+```
+
+Default backend:
+
+```text
+http://127.0.0.1:8787
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+If port `8787` is busy:
+
+```bash
+cd backend
+REFRACT_BACKEND_PORT=8797 npm start
+```
+
+```bash
+cd frontend
+VITE_REFRACT_BACKEND_URL=http://127.0.0.1:8797 npm run dev
+```
+
+## Test
+
+Backend smoke test:
+
+```bash
+cd backend
+npm test
+```
+
+Frontend production build:
+
+```bash
+cd frontend
+npm run build
+```
+
+## Current status
+
+Committed foundation:
+
+- Phase 0/0.5 spec in `docs/refract-artifact-runtime.md`.
+- Local Express backend foundation.
+- Queue seed artifact under `packs/dsa-sd-gt/queue.json`.
+- Fresh Vite/React frontend shell.
+- Strong direction: prompt-authored, generated-once, validated, cached artifacts with fixed visual primitives.
+
+Next implementation direction:
+
+1. Add `profiles/`, `topics/`, `references/`, and `generated/` layout.
+2. Add `sandeep-go-backend` and `sister-python-ai` profiles.
+3. Add `topics/dsa/queue.md` with `allowedVisualKinds: [queue]`.
+4. Add backend profile/topic loader.
+5. Add generated artifact JSON validation.
+6. Add generate-once cache behavior.
+7. Add fixed interactive `queue` visual primitive in `frontend/`.

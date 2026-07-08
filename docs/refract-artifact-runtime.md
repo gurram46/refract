@@ -42,7 +42,6 @@ The product code is organized as:
 packs/      artifact content
 backend/    API, code runner, AI provider routing
 frontend/   real product UI
-canvas/     old reference/dev tool only
 docs/       specs and standards
 ```
 
@@ -74,11 +73,11 @@ Contains the real product UI for beginner/sister mode.
 
 The frontend renders artifacts from the backend. It must not hardcode provider setup into the default user flow.
 
-### `canvas/`
+### Removed: old `canvas/`
 
-`canvas/` is old reference/dev tooling only.
+The old `canvas/` dev tool has been removed from the active product path. It was a paste-a-visual/dev demo and does not match the prompt-authored cached artifact runtime.
 
-Do not keep patching `canvas/` into the product. Useful ideas and rendering primitives may be ported into the new runtime, but the old `canvas/` UI is not the foundation for `frontend/`.
+Useful ideas from the old canvas history may be recovered through git history and ported intentionally into `frontend/` or `backend/`, but `canvas/` itself is not part of the current repo shape.
 
 ### `docs/`
 
@@ -937,7 +936,7 @@ Examples:
 - Do not add Java if Python flow is broken.
 - Do not add Codex bridge if managed provider handling is broken.
 - Do not polish provider settings before beginner mode works.
-- Do not modify old `canvas/` unless explicitly instructed.
+- Do not restore old `canvas/` unless explicitly instructed.
 
 Every Hermes implementation output must include:
 
@@ -990,7 +989,6 @@ references/      manually curated article/video/problem links
 generated/       cached generated artifacts and audio assets
 backend/         local API, generation, validation, runner, cache
 frontend/        artifact viewer and fixed visual primitives
-canvas/          old reference/dev tool only
 ```
 
 Topic prompt files describe what to teach. Generated artifacts are durable outputs produced from those prompts and cached locally. Opening a topic must not regenerate the artifact automatically.
