@@ -1,0 +1,2 @@
+export const CORE_DOMAIN_IDS = Object.freeze(new Set(["dsa", "system-design", "game-theory"]));
+export const PAIRED_DOMAIN_IDS = Object.freeze(new Set(["language", "backend", "frontend", "ml", "ai", "data-science"]));

@@ -194,6 +194,115 @@ async function testProgress() {
   assert(loaded.body.completedArtifacts.some((item) => item.artifactId === "queue"), "progress persists after POST");
 }
 
+async function testOptions() {
+  console.log("\nGET /options");
+  const { status, body } = await fetchJson("/options");
+  assert(status === 200, "options returns 200");
+  assert(Array.isArray(body.levels), "options exposes levels");
+  assert(body.levels.includes("beginner"), "options includes beginner level");
+  assert(Array.isArray(body.coreDomains), "options exposes core domains");
+  assert(body.coreDomains.includes("dsa"), "options includes dsa core domain");
+  assert(Array.isArray(body.pairedDomains), "options exposes paired domains");
+  assert(body.pairedDomains.includes("backend"), "options includes backend paired domain");
+  const serialized = JSON.stringify(body);
+  assert(!serialized.includes("minimax"), "options do not leak provider name");
+  assert(!serialized.includes("deepseek"), "options do not leak fallback model");
+  assert(!serialized.includes("NVIDIA"), "options do not leak vendor name");
+  assert(!serialized.includes("nvapi-"), "options do not leak key prefix");
+}
+
+async function testProfilesAndTopicsAndSessions() {
+  console.log("\nGET/POST /profiles, /topics, /artifact-runtime, /sessions");
+  const empty = await fetchJson("/profiles");
+  assert(empty.status === 200, "profiles list returns 200");
+  assert(Array.isArray(empty.body), "profiles list is an array");
+  assert(empty.body.length === 0, "profiles list is empty at start");
+
+  const created = await fetchJson("/profiles", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: "Smoke learner",
+      level: "beginner",
+      language: "go",
+      pairedDomains: ["backend"],
+      selectedTopics: ["dsa.queue"],
+      goal: "Learn queues end to end"
+    })
+  });
+  assert(created.status === 201, "profile POST returns 201");
+  assert(typeof created.body.id === "string", "created profile has an id");
+  const profileId = created.body.id;
+  assert(created.body.name === "Smoke learner", "created profile name matches");
+  assert(created.body.language === "go", "created profile language is go");
+  assert(Array.isArray(created.body.coreDomains), "created profile has coreDomains");
+  assert(created.body.coreDomains.length === 3, "created profile coreDomains count is three");
+
+  const listed = await fetchJson("/profiles");
+  assert(listed.status === 200, "profiles list after create returns 200");
+  assert(listed.body.length === 1, "profiles list after create has one entry");
+  assert(listed.body[0].id === profileId, "listed profile id matches created id");
+
+  const fetched = await fetchJson(`/profiles/${profileId}`);
+  assert(fetched.status === 200, "GET /profiles/:id returns 200");
+  assert(fetched.body.id === profileId, "GET /profiles/:id matches created id");
+
+  const missingProfile = await fetchJson("/profiles/nope");
+  assert(missingProfile.status === 404, "GET /profiles/missing returns 404");
+
+  const topics = await fetchJson("/topics");
+  assert(topics.status === 200, "topics list returns 200");
+  assert(Array.isArray(topics.body), "topics list is an array");
+  assert(topics.body.some((node) => node.id === "dsa.queue"), "topics list includes dsa.queue");
+
+  const queueTopic = await fetchJson("/topics/dsa.queue");
+  assert(queueTopic.status === 200, "GET /topics/dsa.queue returns 200");
+  assert(queueTopic.body.id === "dsa.queue", "queue topic id matches");
+  assert(queueTopic.body.title === "Queue", "queue topic title matches");
+  assert(queueTopic.body.allowedVisualKinds.includes("queue"), "queue topic allows queue visual kind");
+
+  const uncached = await fetchJson(`/artifact-runtime/${profileId}/dsa.queue`);
+  assert(uncached.status === 404, "artifact-runtime uncached returns 404");
+  assert(uncached.body.status === "not_generated", "artifact-runtime uncached status is not_generated");
+  assert(!JSON.stringify(uncached.body).includes("NVIDIA"), "artifact-runtime uncached body does not leak provider");
+
+  const sessionRead = await fetchJson(`/sessions/${profileId}/dsa.queue`);
+  assert(sessionRead.status === 200, "session read returns 200");
+  assert(sessionRead.body.profileId === profileId, "session read echoes profileId");
+  assert(sessionRead.body.topicId === "dsa.queue", "session read echoes topicId");
+  assert(sessionRead.body.code === null, "session read starts with null code");
+
+  const sessionWrite = await fetchJson(`/sessions/${profileId}/dsa.queue`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code: "package main\nfunc main() {}", currentStep: "step-1" })
+  });
+  assert(sessionWrite.status === 200, "session write returns 200");
+  assert(sessionWrite.body.code === "package main\nfunc main() {}", "session write stores code");
+  assert(sessionWrite.body.currentStep === "step-1", "session write stores currentStep");
+
+  const sessionAfterWrite = await fetchJson(`/sessions/${profileId}/dsa.queue`);
+  assert(sessionAfterWrite.status === 200, "session read after write returns 200");
+  assert(sessionAfterWrite.body.code === "package main\nfunc main() {}", "session read after write persists code");
+}
+
+function assertRequiredLogEvents(output) {
+  console.log("\nServer log inspection");
+  const required = [
+    "env.loaded",
+    "provider.configured",
+    "server.started",
+    "request.started",
+    "request.completed"
+  ];
+  for (const event of required) {
+    assert(output.includes(`"event":"${event}"`), `logs contain ${event} event`);
+  }
+  assert(!output.includes("nvapi-"), "logs do not include key prefix");
+  assert(!output.toLowerCase().includes("bearer"), "logs do not include bearer tokens");
+  assert(!output.includes("NVIDIA_API_KEY="), "logs do not include raw env variable value");
+}
+
 async function main() {
   await rm(path.join(__dirname, ".tmp-smoke-data"), { recursive: true, force: true });
   const server = startServer();
@@ -208,6 +317,9 @@ async function main() {
     await testRun();
     await testAiNotConfigured();
     await testProgress();
+    await testOptions();
+    await testProfilesAndTopicsAndSessions();
+    assertRequiredLogEvents(output);
   } catch (error) {
     failed += 1;
     console.log(`\nFATAL: ${error.message}`);

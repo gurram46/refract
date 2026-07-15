@@ -32,7 +32,9 @@ export async function runPythonArtifact({ artifact, code = "" }) {
     };
   }
 
-  const tests = artifact.practice?.python?.tests || "";
+  const tests = (typeof artifact.practice?.tests === "string" && artifact.practice.tests)
+    || artifact.practice?.python?.tests
+    || "";
   const workspace = await mkdtemp(path.join(tmpdir(), "refract-py-"));
   const filePath = path.join(workspace, "artifact.py");
   const source = `${PYTHON_HELPERS}\n${code}\n\n${tests}`;

@@ -1,0 +1,86 @@
+{
+  "capabilityVersion": "0.2.0",
+  "description": "Single capability source for Refract. Backend validation/generation and frontend recognition derive their allowed sets from this manifest. Generated data remains non-executable. Advertise only the implemented legacy queue visual and the planned/contracted worker-queue v2 primitive; no other primitives appear until they ship.",
+  "implemented": {
+    "schemaVersions": [1, 2],
+    "artifactVersions": {
+      "schema-1": [1],
+      "schema-2": [1]
+    },
+    "visualKinds": {
+      "schema-1": ["queue"],
+      "schema-2": []
+    },
+    "experienceModes": {
+      "schema-2": ["guided-lab"]
+    },
+    "primitiveKinds": {
+      "schema-2": ["worker-queue"]
+    },
+    "primitiveSpecVersions": {
+      "worker-queue": [1]
+    },
+    "semanticEventTypes": {
+      "worker-queue": [
+        "channel.send",
+        "channel.send-blocked",
+        "worker.receive",
+        "worker.complete"
+      ]
+    },
+    "animationPresets": {
+      "worker-queue": [
+        "enqueue-from-producer",
+        "show-blocked",
+        "dequeue-to-worker",
+        "worker-complete",
+        "idle"
+      ]
+    },
+    "traceEvents": {
+      "schema-1": [],
+      "schema-2": {
+        "worker-queue": [
+          "channel.send",
+          "channel.send-blocked",
+          "worker.receive",
+          "worker.complete"
+        ]
+      }
+    },
+    "labKinds": {
+      "schema-1": [],
+      "schema-2": ["code"]
+    },
+    "evaluationKinds": {
+      "code": ["go-tests"]
+    },
+    "checkpointKinds": {
+      "guided-lab": ["prediction"]
+    },
+    "experimentKinds": {
+      "guided-lab": ["bounded-number"]
+    },
+    "experimentIds": {
+      "worker-queue": ["worker-count", "channel-capacity"]
+    },
+    "completionRuleKinds": {
+      "guided-lab": ["required-scenes", "required-checkpoints"]
+    },
+    "primitiveStatuses": {
+      "worker-queue": ["ready", "idle", "busy", "blocked"]
+    },
+    "eventTargetRoles": {
+      "channel.send": ["channel"],
+      "channel.send-blocked": ["producer"],
+      "worker.receive": ["worker"],
+      "worker.complete": ["worker"]
+    }
+  },
+  "contracted": {
+    "description": "Capabilities contracted in design but not yet wired in any execution path. Advertised so generation and validation can accept them; rejected by the runtime until the feature ships.",
+    "primitiveKinds": [],
+    "labKinds": [],
+    "checkpointKinds": []
+  }
+}

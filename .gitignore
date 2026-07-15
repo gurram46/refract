@@ -17,6 +17,7 @@ Thumbs.db
 # Repo-internal working files
 .internal/
 .external/
+.superpowers/
 generated/
 
 # Build and dependency outputs

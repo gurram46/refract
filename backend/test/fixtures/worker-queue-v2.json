@@ -1,0 +1,305 @@
+{
+  "schemaVersion": 2,
+  "artifactVersion": 1,
+  "profileId": "local-learner-a1b2",
+  "topicId": "backend.go.concurrency",
+  "title": "When a Go Worker Queue Fills",
+  "learningObjectives": [
+    "Explain why a send to a full buffered channel blocks",
+    "Distinguish channel capacity from worker throughput"
+  ],
+  "experience": {
+    "mode": "guided-lab",
+    "primitive": {
+      "kind": "worker-queue",
+      "specVersion": 1,
+      "initialState": {
+        "producer": {
+          "id": "producer-1",
+          "status": "ready"
+        },
+        "channel": {
+          "id": "jobs",
+          "capacity": 3,
+          "items": []
+        },
+        "workers": [
+          {
+            "id": "worker-1",
+            "status": "idle"
+          }
+        ]
+      }
+    },
+    "snippets": [
+      {
+        "id": "send-loop",
+        "language": "go",
+        "file": "main.go",
+        "code": "for _, job := range jobs {\n    queue <- job\n}",
+        "editable": false,
+        "annotations": [
+          {
+            "line": 2,
+            "text": "This send waits when the buffer is full."
+          }
+        ]
+      }
+    ],
+    "chapters": [
+      {
+        "id": "backpressure",
+        "title": "Backpressure",
+        "scenes": [
+          {
+            "id": "buffer-fills",
+            "title": "The producer gets ahead",
+            "steps": [
+              {
+                "id": "send-job-1",
+                "event": {
+                  "type": "channel.send",
+                  "target": "jobs",
+                  "payload": {
+                    "item": {
+                      "id": "job-1",
+                      "label": "J1"
+                    }
+                  }
+                },
+                "focus": [
+                  "producer-1",
+                  "jobs",
+                  "job-1"
+                ],
+                "snippet": {
+                  "id": "send-loop",
+                  "lines": [
+                    2
+                  ]
+                },
+                "caption": "J1 enters the buffer.",
+                "narration": "The first send finds an empty buffer.",
+                "animationPreset": "enqueue-from-producer"
+              },
+              {
+                "id": "send-job-2",
+                "event": {
+                  "type": "channel.send",
+                  "target": "jobs",
+                  "payload": {
+                    "item": {
+                      "id": "job-2",
+                      "label": "J2"
+                    }
+                  }
+                },
+                "focus": [
+                  "producer-1",
+                  "jobs",
+                  "job-2"
+                ],
+                "snippet": {
+                  "id": "send-loop",
+                  "lines": [
+                    2
+                  ]
+                },
+                "caption": "J2 enters the buffer.",
+                "narration": "The buffer is two thirds full.",
+                "animationPreset": "enqueue-from-producer"
+              },
+              {
+                "id": "send-job-3",
+                "event": {
+                  "type": "channel.send",
+                  "target": "jobs",
+                  "payload": {
+                    "item": {
+                      "id": "job-3",
+                      "label": "J3"
+                    }
+                  }
+                },
+                "focus": [
+                  "producer-1",
+                  "jobs",
+                  "job-3"
+                ],
+                "snippet": {
+                  "id": "send-loop",
+                  "lines": [
+                    2
+                  ]
+                },
+                "caption": "J3 occupies the final buffer slot.",
+                "narration": "The channel can now hold no more waiting jobs.",
+                "animationPreset": "enqueue-from-producer"
+              },
+              {
+                "id": "send-blocks",
+                "event": {
+                  "type": "channel.send-blocked",
+                  "target": "producer-1",
+                  "payload": {
+                    "item": {
+                      "id": "job-4",
+                      "label": "J4"
+                    }
+                  }
+                },
+                "focus": [
+                  "producer-1",
+                  "jobs"
+                ],
+                "snippet": {
+                  "id": "send-loop",
+                  "lines": [
+                    2
+                  ]
+                },
+                "caption": "The next send waits.",
+                "narration": "A send to a full buffered channel blocks until a worker receives a job.",
+                "animationPreset": "show-blocked",
+                "checkpoint": {
+                  "kind": "prediction",
+                  "question": "What lets the producer continue?",
+                  "options": [
+                    {
+                      "id": "receive",
+                      "label": "A worker receives a job"
+                    },
+                    {
+                      "id": "time",
+                      "label": "Time passes automatically"
+                    }
+                  ],
+                  "answer": "receive",
+                  "explanation": "Receiving frees one channel slot."
+                }
+              },
+              {
+                "id": "worker-receives",
+                "event": {
+                  "type": "worker.receive",
+                  "target": "worker-1",
+                  "payload": {
+                    "item": {
+                      "id": "job-1",
+                      "label": "J1"
+                    }
+                  }
+                },
+                "focus": [
+                  "worker-1",
+                  "jobs",
+                  "job-1"
+                ],
+                "snippet": {
+                  "id": "send-loop",
+                  "lines": [
+                    2
+                  ]
+                },
+                "caption": "Worker 1 takes J1.",
+                "narration": "A receive frees buffer space so the blocked producer can continue.",
+                "animationPreset": "dequeue-to-worker"
+              },
+              {
+                "id": "worker-completes",
+                "event": {
+                  "type": "worker.complete",
+                  "target": "worker-1",
+                  "payload": {
+                    "item": {
+                      "id": "job-1",
+                      "label": "J1"
+                    }
+                  }
+                },
+                "focus": [
+                  "worker-1",
+                  "job-1"
+                ],
+                "snippet": {
+                  "id": "send-loop",
+                  "lines": [
+                    2
+                  ]
+                },
+                "caption": "Worker 1 finishes J1.",
+                "narration": "The worker returns to idle.",
+                "animationPreset": "worker-complete"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "experiments": [
+      {
+        "id": "worker-count",
+        "kind": "bounded-number",
+        "min": 1,
+        "max": 4,
+        "step": 1,
+        "default": 1
+      },
+      {
+        "id": "channel-capacity",
+        "kind": "bounded-number",
+        "min": 0,
+        "max": 8,
+        "step": 1,
+        "default": 3
+      }
+    ],
+    "completionRules": [
+      {
+        "kind": "required-scenes",
+        "sceneIds": [
+          "buffer-fills"
+        ]
+      },
+      {
+        "kind": "required-checkpoints",
+        "stepIds": [
+          "send-blocks"
+        ]
+      }
+    ]
+  },
+  "lab": {
+    "kind": "code",
+    "language": "go",
+    "title": "Build a fair worker queue",
+    "files": [
+      {
+        "path": "main.go",
+        "starterCode": "package main\n"
+      }
+    ],
+    "evaluation": {
+      "kind": "go-tests",
+      "testSetId": "worker-queue-v1"
+    },
+    "trace": {
+      "supportedEvents": [
+        "channel.send",
+        "channel.send-blocked",
+        "worker.receive",
+        "worker.complete"
+      ],
+      "sourceMapRequired": true
+    }
+  },
+  "chat": {
+    "suggestedQuestions": [
+      "Why is the producer blocked?",
+      "Does a larger buffer improve throughput?"
+    ]
+  },
+  "next": [
+    "system-design.queue-backpressure"
+  ]
+}
