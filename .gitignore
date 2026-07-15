@@ -16,6 +16,9 @@ Thumbs.db
 
 # Repo-internal working files
 .internal/
+.external/
+.superpowers/
+generated/
 
 # Build and dependency outputs
 node_modules/
@@ -24,8 +27,8 @@ build/
 coverage/
 .tmp/
 tmp/
-canvas/node_modules/
-canvas/dist/
+backend/data/
+backend/.tmp-smoke-data/
 
 # Language-specific caches
 __pycache__/

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "id": "queue",
+  "pack": "dsa-sd-gt",
+  "title": "Payment Retry Queue",
+  "summary": "Use a queue to retry failed payments in the order they arrived.",
+  "level": "beginner",
+  "lenses": {
+    "dsa": {
+      "title": "Queue",
+      "angle": "FIFO structure, enqueue, dequeue, peek, and empty state.",
+      "studentTakeaway": "The first item added is the first item removed."
+    },
+    "system_design": {
+      "title": "Retry Pipeline",
+      "angle": "A payment retry queue protects workers from bursts and keeps failed payments ordered.",
+      "studentTakeaway": "Queues help systems handle work at a safe pace."
+    },
+    "game_theory": {
+      "title": "Congestion and Fairness",
+      "angle": "Selfish producers can overload shared workers unless the queue has fair ordering and backpressure.",
+      "studentTakeaway": "Fair ordering changes how users and services compete for limited processing."
+    }
+  },
+  "tabs": ["story", "explore", "practice", "review"],
+  "story": {
+    "context": "A payment service needs to retry failed charges without losing order or flooding the worker.",
+    "goal": "Understand why FIFO order matters before writing the queue."
+  },
+  "canvas": {
+    "storyVisual": {
+      "kind": "queue",
+      "title": "Payment retry queue",
+      "items": ["pay_101", "pay_102", "pay_103"],
+      "frontLabel": "next retry",
+      "backLabel": "new failure"
+    },
+    "exploreSpec": {
+      "kind": "queue",
+      "interactive": true,
+      "initialItems": ["pay_101", "pay_102"],
+      "controls": [
+        { "type": "enqueue", "label": "Add failed payment" },
+        { "type": "dequeue", "label": "Retry next payment" },
+        { "type": "slider", "param": "workerSpeed", "label": "Worker speed", "min": 1, "max": 3, "default": 1 },
+        { "type": "reset", "label": "Reset" }
+      ]
+    },
+    "traceReplay": {
+      "kind": "queue",
+      "supportedEvents": ["queue.enqueue", "queue.dequeue", "queue.peek", "queue.empty"]
+    }
+  },
+  "practice": {
+    "defaultLanguage": "python",
+    "languages": ["python", "java"],
+    "python": {
+      "starterCode": "class PaymentRetryQueue:\n    def __init__(self):\n        self.items = []\n\n    def enqueue(self, payment_id):\n        # Add payment_id to the back of the queue.\n        pass\n\n    def dequeue(self):\n        # Remove and return the front payment_id.\n        pass\n\n    def peek(self):\n        # Return the next payment_id without removing it.\n        pass\n\n    def is_empty(self):\n        return len(self.items) == 0\n",
+      "tests": "q = PaymentRetryQueue()\nassert_equal(q.is_empty(), True, 'new queue starts empty')\nq.enqueue('pay_101')\nq.enqueue('pay_102')\nassert_equal(q.peek(), 'pay_101', 'peek returns front item')\nassert_equal(q.dequeue(), 'pay_101', 'dequeue returns first item')\nassert_equal(q.dequeue(), 'pay_102', 'dequeue returns second item')\nassert_equal(q.is_empty(), True, 'queue is empty after removing all items')\n",
+      "traceHelper": "event('queue.enqueue', value=payment_id, label=payment_id)"
+    },
+    "java": {
+      "starterCode": "class PaymentRetryQueue {\n    private java.util.Queue<String> items = new java.util.LinkedList<>();\n\n    void enqueue(String paymentId) {\n        // Add paymentId to the back of the queue.\n    }\n\n    String dequeue() {\n        // Remove and return the front paymentId.\n        return null;\n    }\n\n    String peek() {\n        // Return the next paymentId without removing it.\n        return null;\n    }\n\n    boolean isEmpty() {\n        return items.isEmpty();\n    }\n}\n",
+      "tests": "PaymentRetryQueue q = new PaymentRetryQueue();\nTraceAssert.equal(q.isEmpty(), true, \"new queue starts empty\");\nq.enqueue(\"pay_101\");\nq.enqueue(\"pay_102\");\nTraceAssert.equal(q.peek(), \"pay_101\", \"peek returns front item\");\nTraceAssert.equal(q.dequeue(), \"pay_101\", \"dequeue returns first item\");\nTraceAssert.equal(q.dequeue(), \"pay_102\", \"dequeue returns second item\");\nTraceAssert.equal(q.isEmpty(), true, \"queue is empty after removing all items\");\n",
+      "traceHelper": "RefractTrace.event(\"queue.enqueue\", \"value\", paymentId, \"label\", paymentId);"
+    }
+  },
+  "rubric": [
+    { "dimension": "logic", "label": "Queue logic", "weight": 40 },
+    { "dimension": "edge_cases", "label": "Empty queue and peek cases", "weight": 30 },
+    { "dimension": "trace_usage", "label": "Trace events are useful", "weight": 20 },
+    { "dimension": "clarity", "label": "Readable code", "weight": 10 }
+  ],
+  "next": "stack"
+}

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "nodes": [
+    {
+      "id": "dsa.queue",
+      "title": "Queue",
+      "domain": "dsa",
+      "source": "dsa/queues.md",
+      "allowedVisualKinds": ["queue"],
+      "connections": [
+        "system-design.map",
+        "game-theory.concepts",
+        "backend.go.concurrency",
+        "language.go.five-lens"
+      ]
+    },
+    {
+      "id": "system-design.map",
+      "title": "System Design Map",
+      "domain": "system-design",
+      "source": "system-design/sd-map.md",
+      "allowedVisualKinds": [],
+      "connections": ["dsa.queue"]
+    },
+    {
+      "id": "game-theory.concepts",
+      "title": "Game Theory Foundations",
+      "domain": "game-theory",
+      "source": "game-theory/concepts.md",
+      "allowedVisualKinds": [],
+      "connections": ["dsa.queue"]
+    },
+    {
+      "id": "backend.go.concurrency",
+      "title": "Go Concurrency",
+      "domain": "backend",
+      "source": "backend/go/concurrency.md",
+      "allowedVisualKinds": ["queue"],
+      "connections": ["dsa.queue"]
+    },
+    {
+      "id": "language.go.five-lens",
+      "title": "Go Five-Lens Template",
+      "domain": "language",
+      "source": "languages/go/_template.md",
+      "allowedVisualKinds": [],
+      "connections": ["dsa.queue"]
+    }
+  ]
+}
